@@ -1,0 +1,8 @@
+item {
+  id: 1
+  name: 'buoy'
+}
+item {
+  id: 2
+  name: 'smallball'
+}

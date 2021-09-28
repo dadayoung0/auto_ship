@@ -116,7 +116,7 @@ class ControlMode2:
 
         # 모터 생성 및 기본값 설정
         self.motor = Motor()
-        self.speed = 15
+        self.speed = 5
         self.direction = 0
 
         # 카메라 생성 및 출력 화면 설정
@@ -139,14 +139,17 @@ class ControlMode2:
         # 회전 방향(1: 오른쪽으로 회전, -1: 왼쪽으로 회전)
         self.turn_direction = 1
 
-        # 목적지 좌표 및 각도(x좌표, y좌표, 각도)
-        self.destination = [0, 0, 0]
+        # 목적지 좌표 및 각도(x좌표, y좌표)
+        self.destination = [0, 0]
 
         # 현재 선박의 좌표 및 각도(x좌표, y좌표, 각도)
         self.ship_position = [0, 0, 0]
 
         # 카메라 상태 정보(객체 탐지 성공 여부)
         self.camera_state = True
+
+        # 모터 상태 정보
+        self.drive_mode = 'start'
 
         # 후방 벽과의 거리
         wall_distance_back = 0
@@ -182,11 +185,11 @@ class ControlMode2:
         # 목적지 계산 및 장애물 정보 확인 함수 비동기 실행
         await asyncio.wait([
             self.set_destination(),
-            self.drive_to_destination()
+            self.set_ship_position()
         ])
 
     # 목적지 계산 및 모터 동작
-    # 카메라 + 모터
+    # 카메라
     async def set_destination(self):
         # 카메라 객체 탐지 실패 횟수
         detection_fail_count = 0
@@ -206,6 +209,7 @@ class ControlMode2:
                     # 3번 이상 객체 탐지 실패 시 카메라 상태 변경
                     if detection_fail_count >= 3:
                         self.camera_state = False
+                        self.drive_mode = 'ready'
 
                 # 객체 탐지에 성공했을 때
                 else:
@@ -257,101 +261,105 @@ class ControlMode2:
                     target_buoy_degree = self.turn_direction * cal.get_real_degree(target_buoy_distance, target_buoy_away)
 
                     # 목적지 좌표 저장
-                    self.destination = cal.get_destination(target_buoy_distance, target_buoy_degree, self.ship_position[2])
+                    buoy_point = cal.get_destination(target_buoy_distance, target_buoy_degree, self.ship_position[2])
+                    self.destination = [buoy_point[0] + (self.turn_direction * REAL_BUOY_SIZE), buoy_point[1]]
 
-                    ##################################모터 동작하기
+                    # 모터 모드 변경
+                    self.drive_mode == 'drive'
 
     # 장애물 정보 확인하며 주행 보조
-    # 라이다 + IMU + 모터
-    async def drive_to_destination(self):
+    # 라이다 + IMU
+    async def set_ship_position(self):
         # 무한 반복
         while True:
-            # 카메라 주행 상태일 때
-            if self.camera_state:
-                # 라이다로 가장 짧은 장애물 측정
-                shortest_degree, shortest_distance, _ = self.lidar.shortest_block()
+            # 라이다로 가장 짧은 장애물 측정
+            shortest_degree, shortest_distance, blocks = self.lidar.shortest_block()
 
-                # 가장 짧은 장애물과의 거리가 특정 거리 이하일 때
-                if shortest_distance < SAFE_DISTANCE:
+            # 가장 짧은 장애물과의 거리가 안전 거리 이하일 때
+            if shortest_distance < SAFE_DISTANCE:
+                # 모터 모드 변경
+                self.drive_mode = 'avoid'
 
+            # IMU로 현재 선박 각도 측정(선박 초기 각도 기준)
+            current_degree = (self.imu.imu_read() - self.forward_direction) % 360
 
-    
+            # 선박의 회전 방향이 왼쪽일 때
+            if self.turn_direction == -1:
+                # 현재 선박 위치 업데이트
+                self.ship_position = [blocks[round(((self.forward_direction - 90 + current_degree) % 360) * 2)],
+                blocks[round(((self.forward_direction - 180 + current_degree) % 360) * 2)], current_degree]
 
-    # 주행 상태 판별
-    def set_state(self):      
-        # 객체 탐지 성공 횟수가 7이상이고 마지막 객체 탐지를 성공했을 때
-        if count > 7 and len(results) != 0:
-
-            # 전방의 가장 가까운 장애물 찾기
-            block_distance = 0
-            for idx, block in enumerate(block_distances):
-                # 후방의 장애물 정보 제외
-                if 90 * 2 < idx < 270 * 2 or block == 0:
-                    continue
-
-                # 전방의 장애물 정보 중 가장 가까운 장애물 탐색
-                elif block_distance == 0 or block < block_distance:
-                    block_distance = block
-                    block_degree = idx / 2.0
-
-            # 라이다의 장애물 정보과 카메라의 장애물 정보가 비슷할 때
-            if round(target_buoy_distance / block_distance) == 1 and round(target_buoy_degree / block_degree) == 1:
-                
-                # drive 반환
-                return 'drive'
-
-        # 객체 탐지 성공 횟수가 7이하거나 마지막 객체 탐지를 성공하지 못 했을 때
-        else:
-            # 현재 방향 저장
-            current_direction = self.imu.imu_read()
-
-            # 라이다로 가장 가까운 장애물 측정
-            shortest_degree, _, _ = self.lidar.shortest_block()
-
-            # 현재 방향이 시작 방향과 반대이면서 가장 가까운 장애물이 좌측이나 우측에 있을 때
-            if 160 < current_direction < 200 and (80 < shortest_degree < 100 or 260 < shortest_degree < 280):
-                # end 반환
-                return 'end'
-            
-            # 현재 방향이 시작 방향이면서 가장 가까운 장애물이 좌측이나 우측에 있을 때
-            elif (340 < current_direction < 360 or current_direction < 20) and (80 < shortest_degree < 100 or 260 < shortest_degree < 280):
-                # turn 반환
-                return 'turn'
-
-            # 예외 발생시
+            # 선박의 회전 방향이 오른쪽일 때
             else:
-                # retry 반환
-                return 'retry'
+                # 현재 선박 위치 업데이트
+                self.ship_position = [REAL_TRACK_WIDTH - blocks[round(((self.forward_direction + 90 + current_degree) % 360) * 2)],
+                blocks[round(((self.forward_direction - 180 + current_degree) % 360) * 2)], current_degree]
 
+            # 목적지 부근에 도착했을 때
+            if round(self.ship_position[0] / self.destination[0]) == 1 or round(self.ship_position[1] / self.destination[1]) == 1:
+                self.drive_mode = 'ready'
 
-    # 지도 갱신하기
-    def update_map(self):
-        # 라이다로 가장 가까운 장애물과의 거리 구하기(출발 지점 구하기)
-        block_distance = 1
+            #############################지도 업데이트
 
-        # 지도에 현재 배 좌표 그리기
-        self.map_graphic.draw_ship_on_map([self.map_w / 2, self.map_h - (block_distance * 6)])
+    # 모터 동작하기
+    async def motor_controller(self):
+        # 무한 반복
+        while True:
+            # 목적지로 주행할 때
+            if self.drive_mode == 'drive':
+                # 목적지 각도 계산
+                destination_degree = cal.get_destination_degree(self.destination, self.ship_position[:2])
 
-    
-        #
-        # # 목적지 좌표 계산
-        # destination_x =
-        # destination_y = target_buoy_distance
-        #
-        # # 여유 공간 고려해서 목적지 조정
-        # # 목적지 x 좌표가 양수일 때(우회전 할 때)
-        # if destination_x > 0:
-        #     # 부표 크기만큼 여유 공간 부여
-        #     destination_x += REAL_BUOY_SIZE
-        #
-        # # 목적지 x 좌표가 0 또는 음수일 때(좌회전 할 때)
-        # else:
-        #     # 부표 크기만큼 여유 공간 부여
-        #     destination_x -= REAL_BUOY_SIZE
-        #
-        # # 목적지 좌표 반환
-        # return [destination_x, destination_y]
+                # 모터 지정 각도 저장
+                motor_degree = destination_degree - self.ship_position[2]
+
+                # 각도 보정
+                if motor_degree > 180:
+                    motor_degree -= 360
+                elif motor_degree < -180:
+                    motor_degree += 360
+                if motor_degree > 45:
+                    motor_degree = 45
+                elif motor_degree < -45:
+                    motor_degree = -45
+                
+                # 각도 지정
+                self.degree = motor_degree
+
+            # 근처의 장애물을 피할 때
+            elif self.drive_mode == 'avoid':
+                # 장애물 위치 확인
+                shortest_degree, _, _ = self.lidar.shortest_block()
+
+                # 장애물이 전방에 위치할 때만 방향 변경
+                if 0 <= shortest_degree < 90:
+                    self.motor.motor_move(-45, self.speed)
+                elif 270 < shortest_degree <= 360:
+                    self.motor.motor_move(45, self.speed)
+                else:
+                    self.motor.motor_move(self.direction, self.speed)
+                    
+                # 장애물 피할 때까지 모터 동작
+                time.sleep(0.5)
+
+                # 모터 모드 변경
+                self.drive_mode = 'drive'
+
+            # 다음 목적지를 인지하기 위해 준비할 때
+            elif self.drive_mode == 'ready':
+                pass
+
+            # 운행을 종료할 때
+            elif self.drive_mode == 'end':
+                pass
+
+            # 초기 상태 혹은 대기 상태일 때
+            else:
+                continue
+
+            # 모터 동작
+            self.motor.motor_move(self.direction, self.speed)
 
     # 종료
     def __del__(self):
-        pass
+        print("del")

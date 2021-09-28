@@ -7,7 +7,7 @@ FILL_COLOR = (255, 255, 255)    # white
 
 def setting():
     sock = socket(AF_INET, SOCK_STREAM)
-    sock.connect(('192.168.137.57', 1972))
+    sock.connect(('192.168.1.4', 1972))
 
     pygame.init()
     screen = pygame.display.set_mode((500, 500))

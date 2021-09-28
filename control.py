@@ -67,35 +67,44 @@ class ControlMode1:
                         break
                     if data == "up":
                         self.direction = 1
-                        self.motor.motor_move_only_speed(self.direction * self.speed)
+                        self.motor.motor_move_only_speed(
+                            self.direction * self.speed)
                     elif data == "down":
                         self.direction = -1
-                        self.motor.motor_move_only_speed(self.direction * self.speed)
+                        self.motor.motor_move_only_speed(
+                            self.direction * self.speed)
                     elif data == "left":
                         self.direction = -1
-                        self.motor.motor_move_only_degree(self.direction * self.degree)
+                        self.motor.motor_move_only_degree(
+                            self.direction * self.degree)
                     elif data == "right":
                         self.direction = 1
-                        self.motor.motor_move_only_degree(self.direction * self.degree)
+                        self.motor.motor_move_only_degree(
+                            self.direction * self.degree)
                     elif data == "keyupbldc":
                         self.motor.motor_move_only_speed(0)
                     elif data == "keyupservo":
                         self.motor.motor_move_only_degree(0)
                     if data == "one":
                         self.speed = 15
-                        self.motor.motor_move_only_speed(self.direction * self.speed)
+                        self.motor.motor_move_only_speed(
+                            self.direction * self.speed)
                     elif data == "two":
                         self.speed = 25
-                        self.motor.motor_move_only_speed(self.direction * self.speed)
+                        self.motor.motor_move_only_speed(
+                            self.direction * self.speed)
                     elif data == "thr":
                         self.speed = 35
-                        self.motor.motor_move_only_speed(self.direction * self.speed)
+                        self.motor.motor_move_only_speed(
+                            self.direction * self.speed)
                     elif data == "for":
                         self.speed = 45
-                        self.motor.motor_move_only_speed(self.direction * self.speed)
+                        self.motor.motor_move_only_speed(
+                            self.direction * self.speed)
                     elif data == "fiv":
                         self.speed = 55
-                        self.motor.motor_move_only_speed(self.direction * self.speed)
+                        self.motor.motor_move_only_speed(
+                            self.direction * self.speed)
             # 오류 발생
             except error as err:
                 print("오류 발생 : " + err)
@@ -131,7 +140,8 @@ class ControlMode2:
         self.map_w = REAL_TRACK_WIDTH * MAGNIFICATION
         self.map_h = REAL_TRACK_HEIGHT * MAGNIFICATION
         self.map_graphic = Graphic("Map", self.map_w, self.map_h)
-        self.map_graphic.set_image(np.full((self.map_h, self.map_w, 3), (150, 200, 250), dtype=np.uint8))
+        self.map_graphic.set_image(
+            np.full((self.map_h, self.map_w, 3), (150, 200, 250), dtype=np.uint8))
 
         # 라이다 생성
         self.lidar = Lidar()
@@ -151,6 +161,11 @@ class ControlMode2:
         # 후방 벽과의 거리
         wall_distance_back = 0
 
+        self.g = Graphic()
+
+        # 부표 좌표 추가 트리거 (True일때만 넣을 수 있게)
+        self.add_buoy_point_trigger = True
+
         # 후방 벽과의 거리를 측정할 때까지 반복
         while wall_distance_back == 0:
             # 라이다로 가장 짧은 장애물 측정
@@ -168,14 +183,17 @@ class ControlMode2:
         # 좌우 벽과의 거리의 합이 경기장의 가로 길이와 비슷한지 확인
         if REAL_TRACK_WIDTH - 0.5 < wall_distance_left + wall_distance_right < REAL_TRACK_WIDTH + 0.5:
             # 현재 선박의 좌표 저장(라이다로 측정한 좌표)
-            self.ship_position = [wall_distance_left, REAL_TRACK_HEIGHT - wall_distance_back, self.forward_direction]
+            self.ship_position = [
+                wall_distance_left, REAL_TRACK_HEIGHT - wall_distance_back, self.forward_direction]
 
         else:
             # 현재 선박의 좌표 저장(경기장의 중앙이라고 가정)
-            self.ship_position = [REAL_TRACK_WIDTH / 2.0, REAL_TRACK_HEIGHT - wall_distance_back, self.forward_direction]
+            self.ship_position = [
+                REAL_TRACK_WIDTH / 2.0, REAL_TRACK_HEIGHT - wall_distance_back, self.forward_direction]
 
         # 선박 지도에 그리기
-        self.map_graphic.draw_ship_on_map([self.ship_position[0] * MAGNIFICATION, self.ship_position[1] * MAGNIFICATION])
+        self.map_graphic.draw_ship_on_map(
+            [self.ship_position[0] * MAGNIFICATION, self.ship_position[1] * MAGNIFICATION])
 
     # 자율 주행 시작
     async def drive_auto(self):
@@ -206,6 +224,7 @@ class ControlMode2:
                     # 3번 이상 객체 탐지 실패 시 카메라 상태 변경
                     if detection_fail_count >= 3:
                         self.camera_state = False
+                        self.add_buoy_point_trigger = True
 
                 # 객체 탐지에 성공했을 때
                 else:
@@ -225,7 +244,8 @@ class ControlMode2:
                         self.camera_graphic.draw_object_on_img(result)
 
                         # 객체 크기 탐지
-                        object_size = cal.get_average_size(result[1:3], result[3:])
+                        object_size = cal.get_average_size(
+                            result[1:3], result[3:])
 
                         # 가장 큰 부표 정보 저장
                         if object_size > biggest_buoy_size:
@@ -233,33 +253,43 @@ class ControlMode2:
                             biggest_buoy_xy = result[1:]
 
                     # FPS 이미지에 추가
-                    self.camera_graphic.add_text_on_img("FPS : " + str(self.camera.get_fps()))
+                    self.camera_graphic.add_text_on_img(
+                        "FPS : " + str(self.camera.get_fps()))
 
                     # 사진 출력
                     self.camera_graphic.show_image()
 
                     # 부표 중심 좌표, 부표와의 거리, 부표의 크기 저장
-                    biggest_buoy_center = cal.get_center_point(biggest_buoy_xy[:2], biggest_buoy_xy[2:])
-                    target_buoy_distance = cal.get_real_distance(REAL_BUOY_SIZE, biggest_buoy_size)
-                    target_buoy_away = cal.get_real_size(target_buoy_distance, biggest_buoy_size)
+                    biggest_buoy_center = cal.get_center_point(
+                        biggest_buoy_xy[:2], biggest_buoy_xy[2:])
+                    target_buoy_distance = cal.get_real_distance(
+                        REAL_BUOY_SIZE, biggest_buoy_size)
+                    target_buoy_away = cal.get_real_size(
+                        target_buoy_distance, biggest_buoy_size)
 
                     # 좌표가 우측에 있을 때
                     if biggest_buoy_center[0] > REAL_TRACK_WIDTH * MAGNIFICATION / 2.0:
                         # 회전 방향 오른쪽으로 설정
                         self.turn_direction = 1
-                        
+
                     # 좌표가 좌측에 있을 때
                     else:
                         # 회전 방향 왼쪽으로 설정
                         self.turn_direction = -1
 
                     # 선박과 부표의 각도(좌측: 음수, 우측: 양수), 부표 좌표 저장
-                    target_buoy_degree = self.turn_direction * cal.get_real_degree(target_buoy_distance, target_buoy_away)
+                    target_buoy_degree = self.turn_direction * \
+                        cal.get_real_degree(
+                            target_buoy_distance, target_buoy_away)
 
                     # 목적지 좌표 저장
-                    self.destination = cal.get_destination(target_buoy_distance, target_buoy_degree, self.ship_position[2])
+                    self.destination = cal.get_destination(
+                        target_buoy_distance, target_buoy_degree, self.ship_position[2])
 
-                    ##################################모터 동작하기
+                    if self.add_buoy_point_trigger:
+                        self.g.add_buoy_point(self.destination)
+                        self.add_buoy_point_trigger = False
+        # 모터 동작하기
 
     # 장애물 정보 확인하며 주행 보조
     # 라이다 + IMU + 모터
@@ -274,11 +304,9 @@ class ControlMode2:
                 # 가장 짧은 장애물과의 거리가 특정 거리 이하일 때
                 if shortest_distance < SAFE_DISTANCE:
 
+                    # 주행 상태 판별
 
-    
-
-    # 주행 상태 판별
-    def set_state(self):      
+    def set_state(self):
         # 객체 탐지 성공 횟수가 7이상이고 마지막 객체 탐지를 성공했을 때
         if count > 7 and len(results) != 0:
 
@@ -296,7 +324,7 @@ class ControlMode2:
 
             # 라이다의 장애물 정보과 카메라의 장애물 정보가 비슷할 때
             if round(target_buoy_distance / block_distance) == 1 and round(target_buoy_degree / block_degree) == 1:
-                
+
                 # drive 반환
                 return 'drive'
 
@@ -312,7 +340,7 @@ class ControlMode2:
             if 160 < current_direction < 200 and (80 < shortest_degree < 100 or 260 < shortest_degree < 280):
                 # end 반환
                 return 'end'
-            
+
             # 현재 방향이 시작 방향이면서 가장 가까운 장애물이 좌측이나 우측에 있을 때
             elif (340 < current_direction < 360 or current_direction < 20) and (80 < shortest_degree < 100 or 260 < shortest_degree < 280):
                 # turn 반환
@@ -323,16 +351,16 @@ class ControlMode2:
                 # retry 반환
                 return 'retry'
 
-
     # 지도 갱신하기
+
     def update_map(self):
         # 라이다로 가장 가까운 장애물과의 거리 구하기(출발 지점 구하기)
         block_distance = 1
 
         # 지도에 현재 배 좌표 그리기
-        self.map_graphic.draw_ship_on_map([self.map_w / 2, self.map_h - (block_distance * 6)])
+        self.map_graphic.draw_ship_on_map(
+            [self.map_w / 2, self.map_h - (block_distance * 6)])
 
-    
         #
         # # 목적지 좌표 계산
         # destination_x =
@@ -353,5 +381,6 @@ class ControlMode2:
         # return [destination_x, destination_y]
 
     # 종료
+
     def __del__(self):
         pass

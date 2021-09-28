@@ -1,12 +1,8 @@
 import cv2
 import numpy as np
-
 import math
-import time
 
 # 화면 제어(이미지 표시)
-
-
 class Graphic:
     # 초기화
     def __init__(self, title, width, height):
@@ -77,13 +73,11 @@ class Graphic:
     # 선박 좌표 지도에 표시
     def draw_ship_on_map(self, ship_point, th):
 
-        # th = 0
-
         def rotate(point, th):
             th = math.radians(th)
 
             cx = ship_point[0]
-            cy = ship_point[1]  # centre of square coords
+            cy = ship_point[1]
 
             point[0] -= cx
             point[1] -= cy
@@ -102,9 +96,6 @@ class Graphic:
                            rotate([ship_point[0]-10, ship_point[1]+10], th)], dtype=np.int32)
         # 삼각형 그리기
         cv2.polylines(self.img, [points], True, self.ship_color, 1)
-        # 사각형 그리기
-        # cv2.rectangle(self.img, (ship_point[0] - 20, ship_point[1] - 20),
-        #               (ship_point[0] + 20, ship_point[1] + 20), self.ship_color, 10)
 
     # 부표 좌표 지도에 표시
     def draw_buoy_on_map(self, buoy_points: list):
@@ -114,7 +105,6 @@ class Graphic:
                 self.img, (buoy_point[0], buoy_point[1]), 10, self.buoy_color, 5)
 
     # 부표 좌표 추가
-
     def add_buoy_point(self, x, y):
         self.buoy_point_list.append([x, y])
 
@@ -122,16 +112,3 @@ class Graphic:
     def __del__(self):
         print("Graphic del")
         cv2.destroyAllWindows()
-
-
-w = int(4.5*60)
-h = int(14.5*60)
-
-g = Graphic('busan', w, h)
-th = 0
-while True:
-    th += 1
-    g.set_image(np.full((h, w, 3), (150, 200, 250), dtype=np.uint8))
-    g.draw_ship_on_map([200, 600], th)
-    g.draw_buoy_on_map(g.buoy_point_list)
-    g.show_image()

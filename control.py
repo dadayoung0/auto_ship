@@ -147,7 +147,7 @@ class ControlMode2:
         self.lidar = Lidar()
 
         # 회전 방향(1: 오른쪽으로 회전, -1: 왼쪽으로 회전)
-        self.turn_direction = 1
+        self.turn_direction = -1
 
         # 목적지 좌표 및 각도(x좌표, y좌표)
         self.destination = [0, 0]
@@ -163,8 +163,6 @@ class ControlMode2:
 
         # 후방 벽과의 거리
         wall_distance_back = 0
-
-        self.g = Graphic()
 
         # 부표 좌표 추가 트리거 (True일때만 넣을 수 있게)
         self.add_buoy_point_trigger = True
@@ -187,23 +185,24 @@ class ControlMode2:
         if REAL_TRACK_WIDTH - 0.5 < wall_distance_left + wall_distance_right < REAL_TRACK_WIDTH + 0.5:
             # 현재 선박의 좌표 저장(라이다로 측정한 좌표)
             self.ship_position = [
-                wall_distance_left, REAL_TRACK_HEIGHT - wall_distance_back, self.forward_direction]
+                wall_distance_left, REAL_TRACK_HEIGHT - wall_distance_back, 0]
 
         else:
             # 현재 선박의 좌표 저장(경기장의 중앙이라고 가정)
             self.ship_position = [
-                REAL_TRACK_WIDTH / 2.0, REAL_TRACK_HEIGHT - wall_distance_back, self.forward_direction]
+                REAL_TRACK_WIDTH / 2.0, REAL_TRACK_HEIGHT - wall_distance_back, 0]
 
         # 선박 지도에 그리기
         self.map_graphic.draw_ship_on_map(
-            [self.ship_position[0] * MAGNIFICATION, self.ship_position[1] * MAGNIFICATION])
+            [self.ship_position[0] * MAGNIFICATION, self.ship_position[1] * MAGNIFICATION], 0)
 
     # 자율 주행 시작
     async def drive_auto(self):
         # 목적지 계산 및 장애물 정보 확인 함수 비동기 실행
         await asyncio.wait([
             self.set_destination(),
-            self.set_ship_position()
+            self.set_ship_position(),
+            self.drive_auto()
         ])
 
     # 목적지 계산 및 모터 동작
@@ -281,9 +280,7 @@ class ControlMode2:
                         self.turn_direction = -1
 
                     # 선박과 부표의 각도(좌측: 음수, 우측: 양수), 부표 좌표 저장
-                    target_buoy_degree = self.turn_direction * \
-                        cal.get_real_degree(
-                            target_buoy_distance, target_buoy_away)
+                    target_buoy_degree = self.turn_direction * cal.get_real_degree(target_buoy_distance, target_buoy_away)
 
                     # 목적지 좌표 저장
                     buoy_point = cal.get_destination(target_buoy_distance, target_buoy_degree, self.ship_position[2])
@@ -292,10 +289,12 @@ class ControlMode2:
                     # 모터 모드 변경
                     self.drive_mode = 'drive'
 
+                    # 처음 한번만 부표 그리기
                     if self.add_buoy_point_trigger:
-                        self.g.add_buoy_point(self.destination)
+                        self.map_graphic.add_buoy_point(buoy_point)
                         self.add_buoy_point_trigger = False
-        # 모터 동작하기
+
+                    ###############################목적지 지도에 그리기
 
     # 장애물 정보 확인하며 주행 보조
     # 라이다 + IMU
@@ -303,7 +302,7 @@ class ControlMode2:
         # 무한 반복
         while True:
             # 라이다로 가장 짧은 장애물 측정
-            shortest_degree, shortest_distance, blocks = self.lidar.shortest_block()
+            _, shortest_distance, blocks = self.lidar.shortest_block()
 
             # 가장 짧은 장애물과의 거리가 안전 거리 이하일 때
             if shortest_distance < SAFE_DISTANCE:
@@ -326,10 +325,13 @@ class ControlMode2:
                 blocks[round(((self.forward_direction - 180 + current_degree) % 360) * 2)], current_degree]
 
             # 목적지 부근에 도착했을 때
-            if round(self.ship_position[0] / self.destination[0]) == 1 or round(self.ship_position[1] / self.destination[1]) == 1:
+            if (round(self.ship_position[0] / self.destination[0]) == 1
+            or round(self.ship_position[1] / self.destination[1]) == 1) and self.drive_mode != 'start':
                 self.drive_mode = 'ready'
 
-            #############################지도 업데이트
+            # 선박 지도에 그리기
+            self.map_graphic.draw_ship_on_map(
+                [self.ship_position[0] * MAGNIFICATION, self.ship_position[1] * MAGNIFICATION], current_degree)
 
     # 모터 동작하기
     async def motor_controller(self):
@@ -377,11 +379,21 @@ class ControlMode2:
 
             # 다음 목적지를 인지하기 위해 준비할 때
             elif self.drive_mode == 'ready':
-                pass
+                self.camera_state = True
+                self.add_buoy_point_trigger = True
 
             # 운행을 종료할 때
             elif self.drive_mode == 'end':
-                pass
+                self.direction = 180 - self.ship_position[2]
+
+                # 모터 동작
+                self.motor.motor_move(self.direction, self.speed)
+
+                # 잠시 동작
+                time.sleep(0.5)
+
+                # 종료
+                break
 
             # 초기 상태 혹은 대기 상태일 때
             else:

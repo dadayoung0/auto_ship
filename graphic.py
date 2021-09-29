@@ -115,28 +115,42 @@ class Graphic:
     def draw_destination_on_map(self, destination_point):
         cv2.circle(
             self.img, (destination_point[0], destination_point[1]), 5, self.destination_color, 5)
-    # 종료
 
+    # 지도 그리기
+    def draw_map(self, ship_pos: list, ship_th: int, buoy_pos_list: list, des_pos: list):
+        w = int(4.5*60)
+        h = int(14.5*60)
+
+        self.set_image(np.full((h, w, 3), (150, 200, 250), dtype=np.uint8))
+        self.draw_ship_on_map(ship_pos, ship_th)
+        self.draw_buoy_on_map(buoy_pos_list)
+        self.draw_destination_on_map(des_pos)
+        self.show_image()
+
+    # 종료
     def __del__(self):
         print("Graphic del")
         cv2.destroyAllWindows()
 
 
-w = int(4.5*60)
-h = int(14.5*60)
+# w = int(4.5*60)
+# h = int(14.5*60)
 
-g = Graphic('busan', w, h)
-th = 0
+# g = Graphic('busan', w, h)
+# th = 0
 
-while True:
-    th += 1
-    g.set_image(np.full((h, w, 3), (150, 200, 250), dtype=np.uint8))
-    # 배 그리기
-    # 첫 번째 인자로 x,y좌표 리스트(튜플 안됨⚠️) 두 번째 인자로 회전값(0-360)
-    g.draw_ship_on_map([200, 600], th)
-    # 부표 그리기
-    # 부표 좌표가 담긴 리스트
-    g.draw_buoy_on_map(g.buoy_point_list)
-    # 목적지 그리기
-    g.draw_destination_on_map([250, 500])
-    g.show_image()
+# ship_pos = [200, 600]
+
+# while True:
+#     th += 1
+#     ship_pos[0] += 0.1
+#     g.set_image(np.full((h, w, 3), (150, 200, 250), dtype=np.uint8))
+#     # 배 그리기
+#     # 첫 번째 인자로 x,y좌표 리스트(튜플 안됨⚠️) 두 번째 인자로 회전값(0-360)
+#     g.draw_ship_on_map(ship_pos, th)
+#     # 부표 그리기
+#     # 부표 좌표가 담긴 리스트
+#     g.draw_buoy_on_map(g.buoy_point_list)
+#     # 목적지 그리기
+#     g.draw_destination_on_map([250, 500])
+#     g.show_image()

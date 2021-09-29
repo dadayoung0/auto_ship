@@ -203,15 +203,15 @@ class ControlMode2:
             # 카메라로 객체 탐지가 가능한 상황일 때
             if self.camera_state:
                 # 카메라로 목적지 계산
-                asyncio.create_task(self.set_destination())
+                asyncio.ensure_future(self.set_destination())
             asyncio.sleep(0.1)
             # 배 위치 설정
             self.set_ship_position()
             # 모터 동작
-            asyncio.create_task(self.motor_controller())
+            asyncio.ensure_future(self.motor_controller())
             # 지도 갱신
             self.map_graphic.draw_map([int(self.ship_position[0] * MAGNIFICATION), int(self.ship_position[1] * MAGNIFICATION)],
-            int(self.ship_position[2]), self.destination)
+                                      int(self.ship_position[2]), self.destination)
 
     # 목적지 계산(카메라)
     async def set_destination(self):
@@ -272,7 +272,8 @@ class ControlMode2:
                 self.turn_direction = -1
 
             # 선박과 부표의 각도(좌측: 음수, 우측: 양수), 부표 좌표 저장
-            target_buoy_degree = self.turn_direction * cal.get_real_degree(target_buoy_distance, target_buoy_away)
+            target_buoy_degree = self.turn_direction * \
+                cal.get_real_degree(target_buoy_distance, target_buoy_away)
 
             # 목적지 좌표 저장
             buoy_point = cal.get_destination(
@@ -289,7 +290,8 @@ class ControlMode2:
                 self.add_buoy_point_trigger = False
 
         # FPS 이미지에 추가
-        self.camera_graphic.add_text_on_img("FPS : " + str(self.camera.get_fps()))
+        self.camera_graphic.add_text_on_img(
+            "FPS : " + str(self.camera.get_fps()))
 
         # 사진 출력
         self.camera_graphic.show_image()

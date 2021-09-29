@@ -1,4 +1,5 @@
 from control import *
+import asyncio
 
 
 # ################### MODE LIST ####################
@@ -27,7 +28,10 @@ if __name__ == "__main__":
         control = ControlMode2()
 
         # 주행 시작
-        asyncio.run(control.drive_auto())
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(control.drive_auto())
+        loop.close()
+        # asyncio.run(control.drive_auto())
 
     # 주행 종료
     del control

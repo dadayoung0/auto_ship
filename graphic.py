@@ -1,8 +1,6 @@
 import cv2
 import numpy as np
-
 import math
-import time
 
 # 화면 제어(이미지 표시)
 
@@ -78,13 +76,11 @@ class Graphic:
     # 선박 좌표 지도에 표시
     def draw_ship_on_map(self, ship_point, th):
 
-        # th = 0
-
         def rotate(point, th):
             th = math.radians(th)
 
             cx = ship_point[0]
-            cy = ship_point[1]  # centre of square coords
+            cy = ship_point[1]
 
             point[0] -= cx
             point[1] -= cy
@@ -103,9 +99,6 @@ class Graphic:
                            rotate([ship_point[0]-10, ship_point[1]+10], th)], dtype=np.int32)
         # 삼각형 그리기
         cv2.polylines(self.img, [points], True, self.ship_color, 1)
-        # 사각형 그리기
-        # cv2.rectangle(self.img, (ship_point[0] - 20, ship_point[1] - 20),
-        #               (ship_point[0] + 20, ship_point[1] + 20), self.ship_color, 10)
 
     # 부표 좌표 지도에 표시
     def draw_buoy_on_map(self, buoy_points: list):

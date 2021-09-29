@@ -322,6 +322,8 @@ class ControlMode2:
             self.ship_position = [REAL_TRACK_WIDTH - blocks[round(((self.forward_direction + 90 + current_degree) % 360) * 2)],
                                   blocks[round(((self.forward_direction - 180 + current_degree) % 360) * 2)], current_degree]
 
+            print('배 좌표 : ', self.ship_position)
+
         # 목적지 부근에 도착했을 때
         if cal.get_distance(self.ship_position[:2], self.destination) < 0.5 and self.drive_mode != 'start':
             self.drive_mode = 'ready'

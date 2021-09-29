@@ -29,6 +29,7 @@ class Graphic:
         self.text_color = (200, 0, 200)
         self.ship_color = (0, 0, 0)
         self.buoy_color = (0, 0, 255)
+        self.destination_color = (0, 255, 255)
         self.smallball_color = (0, 255, 0)
 
         # 부표 좌표 리스트
@@ -114,11 +115,15 @@ class Graphic:
                 self.img, (buoy_point[0], buoy_point[1]), 10, self.buoy_color, 5)
 
     # 부표 좌표 추가
-
     def add_buoy_point(self, x, y):
         self.buoy_point_list.append([x, y])
 
+    # 목적지 좌표 지도에 표시
+    def draw_destination_on_map(self, destination_point):
+        cv2.circle(
+            self.img, (destination_point[0], destination_point[1]), 5, self.destination_color, 5)
     # 종료
+
     def __del__(self):
         print("Graphic del")
         cv2.destroyAllWindows()
@@ -129,9 +134,15 @@ h = int(14.5*60)
 
 g = Graphic('busan', w, h)
 th = 0
+
 while True:
     th += 1
     g.set_image(np.full((h, w, 3), (150, 200, 250), dtype=np.uint8))
+    # 배 그리기
+    # 첫 번째 인자로 x,y좌표 리스트(튜플 안됨⚠️) 두 번째 인자로 회전값(0-360)
     g.draw_ship_on_map([200, 600], th)
+    # 부표 그리기
+    # 부표 좌표가 담긴 리스트
     g.draw_buoy_on_map(g.buoy_point_list)
+    g.draw_destination_on_map([250, 500])
     g.show_image()

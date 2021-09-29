@@ -155,8 +155,12 @@ class ControlMode2:
         # 현재 선박의 좌표 및 각도(x좌표, y좌표, 각도)
         self.ship_position = [0, 0, 0]
 
-        # 카메라 상태 정보(객체 탐지 성공 여부)
+        # 작업 상태
+        self.process = True
+
+        # 카메라 상태 정보(객체 탐지 가능 여부, 객체 탐지 실패 횟수)
         self.camera_state = True
+        self.detection_fail_count = 0
 
         # 모터 상태 정보
         self.drive_mode = 'start'
@@ -198,112 +202,104 @@ class ControlMode2:
 
     # 자율 주행 시작
     async def drive_auto(self):
-        # 목적지 계산 및 장애물 정보 확인 함수 비동기 실행
-        await asyncio.wait([
-            self.set_destination(),
-            self.set_ship_position(),
-            self.drive_auto()
-        ])
+        # 작업 상태일 때
+        while self.process:
+            # 카메라로 객체 탐지가 가능한 상황일 때
+            if self.camera_state:
+                # 카메라로 목적지 계산
+                asyncio.create_task(self.set_destination())
+            asyncio.sleep(0.1)
+            # 배 위치 설정
+            self.set_ship_position()
+            # 모터 동작
+            asyncio.create_task(self.motor_controller())
 
-    # 목적지 계산 및 모터 동작
-    # 카메라
+    # 목적지 계산(카메라)
     async def set_destination(self):
-        # 카메라 객체 탐지 실패 횟수
-        detection_fail_count = 0
+        # 객체 탐지 결과 저장
+        img, results = self.camera.object_detection()
 
-        # 무한 반복
-        # while True:
-        # 카메라로 객체 탐지가 가능한 상황일 때
-        if self.camera_state:
-            # 객체 탐지 결과 저장
-            img, results = self.camera.object_detection()
+        # 객체 탐지에 실패했을 때
+        if len(results) == 0:
+            # 객체 탐지 실패 횟수 1 더하기
+            self.detection_fail_count += 1
 
-            # 객체 탐지에 실패했을 때
-            if len(results) == 0:
-                # 객체 탐지 실패 횟수 1 더하기
-                detection_fail_count += 1
+            # 3번 이상 객체 탐지 실패 시 카메라 상태 변경
+            if self.detection_fail_count >= 3:
+                self.camera_state = False
 
-                # 3번 이상 객체 탐지 실패 시 카메라 상태 변경
-                if detection_fail_count >= 3:
-                    self.camera_state = False
+        # 객체 탐지에 성공했을 때
+        else:
+            # 객체 탐지 실패 횟수 초기화
+            self.detection_fail_count = 0
 
-            # 객체 탐지에 성공했을 때
+            # 화면에 출력할 이미지 설정
+            self.camera_graphic.set_image(img)
+
+            # 가장 큰 부표 정보 저장할 리스트
+            biggest_buoy_xy = []
+            biggest_buoy_size = 0
+
+            # 탐지된 객체 수만큼 반복
+            for result in results:
+                # 객체 정보 이미지에 추가
+                self.camera_graphic.draw_object_on_img(result)
+
+                # 객체 크기 탐지
+                object_size = cal.get_average_size(
+                    result[1:3], result[3:])
+
+                # 가장 큰 부표 정보 저장
+                if object_size > biggest_buoy_size:
+                    biggest_buoy_size = object_size
+                    biggest_buoy_xy = result[1:]
+
+            # FPS 이미지에 추가
+            self.camera_graphic.add_text_on_img("FPS : " + str(self.camera.get_fps()))
+
+            # 사진 출력
+            self.camera_graphic.show_image()
+
+            # 부표 중심 좌표, 부표와의 거리, 부표의 크기 저장
+            biggest_buoy_center = cal.get_center_point(
+                biggest_buoy_xy[:2], biggest_buoy_xy[2:])
+            target_buoy_distance = cal.get_real_distance(
+                REAL_BUOY_SIZE, biggest_buoy_size)
+            target_buoy_away = cal.get_real_size(
+                target_buoy_distance, biggest_buoy_size)
+
+            # 좌표가 우측에 있을 때
+            if biggest_buoy_center[0] > REAL_TRACK_WIDTH * MAGNIFICATION / 2.0:
+                # 회전 방향 오른쪽으로 설정
+                self.turn_direction = 1
+
+            # 좌표가 좌측에 있을 때
             else:
-                # 객체 탐지 실패 횟수 초기화
-                detection_fail_count = 0
+                # 회전 방향 왼쪽으로 설정
+                self.turn_direction = -1
 
-                # 화면에 출력할 이미지 설정
-                self.camera_graphic.set_image(img)
+            # 선박과 부표의 각도(좌측: 음수, 우측: 양수), 부표 좌표 저장
+            target_buoy_degree = self.turn_direction * cal.get_real_degree(target_buoy_distance, target_buoy_away)
 
-                # 가장 큰 부표 정보 저장할 리스트
-                biggest_buoy_xy = []
-                biggest_buoy_size = 0
+            # 목적지 좌표 저장
+            buoy_point = cal.get_destination(
+                target_buoy_distance, target_buoy_degree, self.ship_position[2])
+            self.destination = [
+                buoy_point[0] + (self.turn_direction * REAL_BUOY_SIZE), buoy_point[1]]
 
-                # 탐지된 객체 수만큼 반복
-                for result in results:
-                    # 객체 정보 이미지에 추가
-                    self.camera_graphic.draw_object_on_img(result)
+            # 모터 모드 변경
+            self.drive_mode = 'drive'
 
-                    # 객체 크기 탐지
-                    object_size = cal.get_average_size(
-                        result[1:3], result[3:])
+            # 처음 한번만 부표 그리기
+            if self.add_buoy_point_trigger:
+                self.map_graphic.add_buoy_point(buoy_point)
+                self.add_buoy_point_trigger = False
 
-                    # 가장 큰 부표 정보 저장
-                    if object_size > biggest_buoy_size:
-                        biggest_buoy_size = object_size
-                        biggest_buoy_xy = result[1:]
+            # 목적지 지도에 그리기
+            self.map_graphic.draw_destination_on_map(self.destination)
 
-                # FPS 이미지에 추가
-                self.camera_graphic.add_text_on_img(
-                    "FPS : " + str(self.camera.get_fps()))
-
-                # 사진 출력
-                self.camera_graphic.show_image()
-
-                # 부표 중심 좌표, 부표와의 거리, 부표의 크기 저장
-                biggest_buoy_center = cal.get_center_point(
-                    biggest_buoy_xy[:2], biggest_buoy_xy[2:])
-                target_buoy_distance = cal.get_real_distance(
-                    REAL_BUOY_SIZE, biggest_buoy_size)
-                target_buoy_away = cal.get_real_size(
-                    target_buoy_distance, biggest_buoy_size)
-
-                # 좌표가 우측에 있을 때
-                if biggest_buoy_center[0] > REAL_TRACK_WIDTH * MAGNIFICATION / 2.0:
-                    # 회전 방향 오른쪽으로 설정
-                    self.turn_direction = 1
-
-                # 좌표가 좌측에 있을 때
-                else:
-                    # 회전 방향 왼쪽으로 설정
-                    self.turn_direction = -1
-
-                # 선박과 부표의 각도(좌측: 음수, 우측: 양수), 부표 좌표 저장
-                target_buoy_degree = self.turn_direction * \
-                    cal.get_real_degree(
-                        target_buoy_distance, target_buoy_away)
-
-                # 목적지 좌표 저장
-                buoy_point = cal.get_destination(
-                    target_buoy_distance, target_buoy_degree, self.ship_position[2])
-                self.destination = [
-                    buoy_point[0] + (self.turn_direction * REAL_BUOY_SIZE), buoy_point[1]]
-
-                # 모터 모드 변경
-                self.drive_mode = 'drive'
-
-                # 처음 한번만 부표 그리기
-                if self.add_buoy_point_trigger:
-                    self.map_graphic.add_buoy_point(buoy_point)
-                    self.add_buoy_point_trigger = False
-
-                    # 목적지 지도에 그리기
-
-    # 장애물 정보 확인하며 주행 보조
-    # 라이다 + IMU
-    async def set_ship_position(self):
-        # 무한 반복
-        # while True:
+    # 장애물 정보 확인하며 주행 보조(라이다 + IMU)
+    def set_ship_position(self):
         # 라이다로 가장 짧은 장애물 측정
         _, shortest_distance, blocks = self.lidar.shortest_block()
 
@@ -339,8 +335,6 @@ class ControlMode2:
 
     # 모터 동작하기
     async def motor_controller(self):
-        # 무한 반복
-        # while True:
         # 목적지로 주행할 때
         if self.drive_mode == 'drive':
             # 목적지 각도 계산
@@ -377,11 +371,10 @@ class ControlMode2:
                 self.motor.motor_move(self.direction, self.speed)
 
             # 장애물 피할 때까지 모터 동작
-            time.sleep(0.5)
+            await asyncio.sleep(0.5)
 
             # 모터 모드 변경
             self.drive_mode = 'drive'
-            # continue
 
         # 다음 목적지를 인지하기 위해 준비할 때
         elif self.drive_mode == 'ready':
@@ -396,11 +389,13 @@ class ControlMode2:
                 self.motor.motor_move(self.direction, self.speed)
 
                 # 잠시 동작
-                time.sleep(0.5)
+                await asyncio.sleep(0.5)
 
-                # 종료
-                # 프로세스 전부 종료하기
-                # break
+                # 모터 정지
+                self.motor.motor_move(0, 0)
+
+                # 프로세스 종료하기
+                self.process = False
 
             # 각도를 조절할 때
             else:
@@ -424,23 +419,8 @@ class ControlMode2:
                 self.camera_state = True
                 self.add_buoy_point_trigger = True
 
-        # 초기 상태 혹은 대기 상태일 때
-        # else:
-            # continue
-
         # 모터 동작
         self.motor.motor_move(self.direction, self.speed)
-
-    async def run_async_loop(self):
-        while True:
-            # 목적지 설정
-            if not self.is_detected:
-                asyncio.create_task(self.set_destination())
-            asyncio.sleep(0.1)
-            # 배 위치 설정
-            self.set_ship_position()
-            # 모터 동작
-            self.motor_controller()
 
     # 종료
     def __del__(self):

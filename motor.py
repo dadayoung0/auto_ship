@@ -1,7 +1,7 @@
-from adafruit_servokit import ServoKit                          #서보모터 드라이버를 사용하기 위해 패키지를 불러옵니다
-import board                                                    #서보모터 드라이버 패키지에 종속된 패키지입니다
-import busio                                                    #위와같이 서보모터 드라이버 패키지에 종속된 패키지입니다
-import time                                                     #모터 제어시 delay를 주기 위해 time패키지를 불러옵니다
+from adafruit_servokit import ServoKit  # 서보모터 드라이버를 사용하기 위해 패키지를 불러옵니다
+import board  # 서보모터 드라이버 패키지에 종속된 패키지입니다
+import busio  # 위와같이 서보모터 드라이버 패키지에 종속된 패키지입니다
+import time  # 모터 제어시 delay를 주기 위해 time패키지를 불러옵니다
 
 
 class Motor:

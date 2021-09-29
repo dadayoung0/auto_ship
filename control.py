@@ -137,8 +137,8 @@ class ControlMode2:
         self.forward_direction = self.imu.imu_read()
 
         # 지도 크기 설정 후 지도 생성(세로 : 14.5m * 60 = 870, 가로 : 4.5m * 60 = 270)
-        self.map_w = REAL_TRACK_WIDTH * MAGNIFICATION
-        self.map_h = REAL_TRACK_HEIGHT * MAGNIFICATION
+        self.map_w = int(REAL_TRACK_WIDTH * MAGNIFICATION)
+        self.map_h = int(REAL_TRACK_HEIGHT * MAGNIFICATION)
         self.map_graphic = Graphic("Map", self.map_w, self.map_h)
         self.map_graphic.set_image(
             np.full((self.map_h, self.map_w, 3), (150, 200, 250), dtype=np.uint8))
@@ -196,10 +196,6 @@ class ControlMode2:
             self.ship_position = [
                 REAL_TRACK_WIDTH / 2.0, REAL_TRACK_HEIGHT - wall_distance_back, 0]
 
-        # 선박 지도에 그리기
-        self.map_graphic.draw_ship_on_map(
-            [self.ship_position[0] * MAGNIFICATION, self.ship_position[1] * MAGNIFICATION], 0)
-
     # 자율 주행 시작
     async def drive_auto(self):
         # 작업 상태일 때
@@ -213,6 +209,9 @@ class ControlMode2:
             self.set_ship_position()
             # 모터 동작
             asyncio.create_task(self.motor_controller())
+            # 지도 갱신
+            self.map_graphic.draw_map([int(self.ship_position[0] * MAGNIFICATION), int(self.ship_position[1] * MAGNIFICATION)],
+            int(self.ship_position[2]), self.destination)
 
     # 목적지 계산(카메라)
     async def set_destination(self):
@@ -295,9 +294,6 @@ class ControlMode2:
                 self.map_graphic.add_buoy_point(buoy_point)
                 self.add_buoy_point_trigger = False
 
-            # 목적지 지도에 그리기
-            self.map_graphic.draw_destination_on_map(self.destination)
-
     # 장애물 정보 확인하며 주행 보조(라이다 + IMU)
     def set_ship_position(self):
         # 라이다로 가장 짧은 장애물 측정
@@ -328,10 +324,6 @@ class ControlMode2:
         if (round(self.ship_position[0] / self.destination[0]) == 1
                 or round(self.ship_position[1] / self.destination[1]) == 1) and self.drive_mode != 'start':
             self.drive_mode = 'ready'
-
-        # 선박 지도에 그리기
-        self.map_graphic.draw_ship_on_map(
-            [self.ship_position[0] * MAGNIFICATION, self.ship_position[1] * MAGNIFICATION], current_degree)
 
     # 모터 동작하기
     async def motor_controller(self):

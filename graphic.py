@@ -137,5 +137,6 @@ while True:
     # 부표 그리기
     # 부표 좌표가 담긴 리스트
     g.draw_buoy_on_map(g.buoy_point_list)
+    # 목적지 그리기
     g.draw_destination_on_map([250, 500])
     g.show_image()

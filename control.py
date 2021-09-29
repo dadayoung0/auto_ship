@@ -279,11 +279,15 @@ class ControlMode2:
                         self.turn_direction = -1
 
                     # 선박과 부표의 각도(좌측: 음수, 우측: 양수), 부표 좌표 저장
-                    target_buoy_degree = self.turn_direction * cal.get_real_degree(target_buoy_distance, target_buoy_away)
+                    target_buoy_degree = self.turn_direction * \
+                        cal.get_real_degree(
+                            target_buoy_distance, target_buoy_away)
 
                     # 목적지 좌표 저장
-                    buoy_point = cal.get_destination(target_buoy_distance, target_buoy_degree, self.ship_position[2])
-                    self.destination = [buoy_point[0] + (self.turn_direction * REAL_BUOY_SIZE), buoy_point[1]]
+                    buoy_point = cal.get_destination(
+                        target_buoy_distance, target_buoy_degree, self.ship_position[2])
+                    self.destination = [
+                        buoy_point[0] + (self.turn_direction * REAL_BUOY_SIZE), buoy_point[1]]
 
                     # 모터 모드 변경
                     self.drive_mode = 'drive'
@@ -293,7 +297,7 @@ class ControlMode2:
                         self.map_graphic.add_buoy_point(buoy_point)
                         self.add_buoy_point_trigger = False
 
-                    ###############################목적지 지도에 그리기
+                    # 목적지 지도에 그리기
 
     # 장애물 정보 확인하며 주행 보조
     # 라이다 + IMU
@@ -309,23 +313,24 @@ class ControlMode2:
                 self.drive_mode = 'avoid'
 
             # IMU로 현재 선박 각도 측정(선박 초기 각도 기준)
-            current_degree = (self.imu.imu_read() - self.forward_direction) % 360
+            current_degree = (self.imu.imu_read() -
+                              self.forward_direction) % 360
 
             # 선박의 회전 방향이 왼쪽일 때
             if self.turn_direction == -1:
                 # 현재 선박 위치 업데이트
                 self.ship_position = [blocks[round(((self.forward_direction - 90 + current_degree) % 360) * 2)],
-                blocks[round(((self.forward_direction - 180 + current_degree) % 360) * 2)], current_degree]
+                                      blocks[round(((self.forward_direction - 180 + current_degree) % 360) * 2)], current_degree]
 
             # 선박의 회전 방향이 오른쪽일 때
             else:
                 # 현재 선박 위치 업데이트
                 self.ship_position = [REAL_TRACK_WIDTH - blocks[round(((self.forward_direction + 90 + current_degree) % 360) * 2)],
-                blocks[round(((self.forward_direction - 180 + current_degree) % 360) * 2)], current_degree]
+                                      blocks[round(((self.forward_direction - 180 + current_degree) % 360) * 2)], current_degree]
 
             # 목적지 부근에 도착했을 때
             if (round(self.ship_position[0] / self.destination[0]) == 1
-            or round(self.ship_position[1] / self.destination[1]) == 1) and self.drive_mode != 'start':
+                    or round(self.ship_position[1] / self.destination[1]) == 1) and self.drive_mode != 'start':
                 self.drive_mode = 'ready'
 
             # 선박 지도에 그리기
@@ -339,7 +344,8 @@ class ControlMode2:
             # 목적지로 주행할 때
             if self.drive_mode == 'drive':
                 # 목적지 각도 계산
-                destination_degree = cal.get_destination_degree(self.destination, self.ship_position[:2])
+                destination_degree = cal.get_destination_degree(
+                    self.destination, self.ship_position[:2])
 
                 # 모터 지정 각도 저장
                 motor_degree = destination_degree - self.ship_position[2]
@@ -353,7 +359,7 @@ class ControlMode2:
                     motor_degree = 45
                 elif motor_degree < -45:
                     motor_degree = -45
-                
+
                 # 각도 지정
                 self.direction = motor_degree
 
@@ -369,7 +375,7 @@ class ControlMode2:
                     self.motor.motor_move(45, self.speed)
                 else:
                     self.motor.motor_move(self.direction, self.speed)
-                    
+
                 # 장애물 피할 때까지 모터 동작
                 time.sleep(0.5)
 
@@ -393,8 +399,8 @@ class ControlMode2:
                     time.sleep(0.5)
 
                     # 종료
-                    #################################프로세스 전부 종료하기
-                    break
+                    # 프로세스 전부 종료하기
+                    # break
 
                 # 각도를 조절할 때
                 else:
@@ -424,6 +430,17 @@ class ControlMode2:
 
             # 모터 동작
             self.motor.motor_move(self.direction, self.speed)
+
+    async def run_async_loop(self):
+        while True:
+            # 목적지 설정
+            if not self.is_detected:
+                asyncio.create_task(self.set_destination())
+            asyncio.sleep(0.1)
+            # 배 위치 설정
+            self.set_ship_position()
+            # 모터 동작
+            self.motor_controller()
 
     # 종료
     def __del__(self):

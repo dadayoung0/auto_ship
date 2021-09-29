@@ -218,6 +218,9 @@ class ControlMode2:
         # 객체 탐지 결과 저장
         img, results = self.camera.object_detection()
 
+        # 화면에 출력할 이미지 설정
+        self.camera_graphic.set_image(img)
+
         # 객체 탐지에 실패했을 때
         if len(results) == 0:
             # 객체 탐지 실패 횟수 1 더하기
@@ -231,9 +234,6 @@ class ControlMode2:
         else:
             # 객체 탐지 실패 횟수 초기화
             self.detection_fail_count = 0
-
-            # 화면에 출력할 이미지 설정
-            self.camera_graphic.set_image(img)
 
             # 가장 큰 부표 정보 저장할 리스트
             biggest_buoy_xy = []
@@ -252,12 +252,6 @@ class ControlMode2:
                 if object_size > biggest_buoy_size:
                     biggest_buoy_size = object_size
                     biggest_buoy_xy = result[1:]
-
-            # FPS 이미지에 추가
-            self.camera_graphic.add_text_on_img("FPS : " + str(self.camera.get_fps()))
-
-            # 사진 출력
-            self.camera_graphic.show_image()
 
             # 부표 중심 좌표, 부표와의 거리, 부표의 크기 저장
             biggest_buoy_center = cal.get_center_point(
@@ -293,6 +287,12 @@ class ControlMode2:
             if self.add_buoy_point_trigger:
                 self.map_graphic.add_buoy_point(buoy_point)
                 self.add_buoy_point_trigger = False
+
+        # FPS 이미지에 추가
+        self.camera_graphic.add_text_on_img("FPS : " + str(self.camera.get_fps()))
+
+        # 사진 출력
+        self.camera_graphic.show_image()
 
     # 장애물 정보 확인하며 주행 보조(라이다 + IMU)
     def set_ship_position(self):

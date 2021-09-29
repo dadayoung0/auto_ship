@@ -226,7 +226,6 @@ class ControlMode2:
                     # 3번 이상 객체 탐지 실패 시 카메라 상태 변경
                     if detection_fail_count >= 3:
                         self.camera_state = False
-                        self.drive_mode = 'ready'
 
                 # 객체 탐지에 성공했을 때
                 else:
@@ -356,7 +355,7 @@ class ControlMode2:
                     motor_degree = -45
                 
                 # 각도 지정
-                self.degree = motor_degree
+                self.direction = motor_degree
 
             # 근처의 장애물을 피할 때
             elif self.drive_mode == 'avoid':
@@ -376,24 +375,48 @@ class ControlMode2:
 
                 # 모터 모드 변경
                 self.drive_mode = 'drive'
+                continue
 
             # 다음 목적지를 인지하기 위해 준비할 때
             elif self.drive_mode == 'ready':
-                self.camera_state = True
-                self.add_buoy_point_trigger = True
+                # 장애물 위치 확인
+                _, _, blocks = self.lidar.shortest_block()
 
-            # 운행을 종료할 때
-            elif self.drive_mode == 'end':
-                self.direction = 180 - self.ship_position[2]
+                # 운행을 종료할 때(후방 각도 and 전방의 벽 인지)
+                if 90 < self.ship_position[2] < 270 and blocks[int((180 - self.ship_position[2]) % 360) * 2] < 5:
+                    self.direction = 180 - self.ship_position[2]
 
-                # 모터 동작
-                self.motor.motor_move(self.direction, self.speed)
+                    # 모터 동작
+                    self.motor.motor_move(self.direction, self.speed)
 
-                # 잠시 동작
-                time.sleep(0.5)
+                    # 잠시 동작
+                    time.sleep(0.5)
 
-                # 종료
-                break
+                    # 종료
+                    #################################프로세스 전부 종료하기
+                    break
+
+                # 각도를 조절할 때
+                else:
+                    # 현재 회전 방향의 반대로 각도 지정
+                    motor_degree = self.turn_direction * (-45)
+
+                    # 각도 보정
+                    if motor_degree > 180:
+                        motor_degree -= 360
+                    elif motor_degree < -180:
+                        motor_degree += 360
+                    if motor_degree > 45:
+                        motor_degree = 45
+                    elif motor_degree < -45:
+                        motor_degree = -45
+
+                    # 각도 지정
+                    self.direction = motor_degree
+
+                    # 카메라 상태 변경
+                    self.camera_state = True
+                    self.add_buoy_point_trigger = True
 
             # 초기 상태 혹은 대기 상태일 때
             else:
@@ -403,6 +426,5 @@ class ControlMode2:
             self.motor.motor_move(self.direction, self.speed)
 
     # 종료
-
     def __del__(self):
         print("del")

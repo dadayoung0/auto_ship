@@ -26,46 +26,8 @@ if __name__ == "__main__":
         # 클래스 불러오기
         control = ControlMode2()
 
-        # 자율 주행 상태 판별
-        state = control.set_state()
-
-        # 자율 주행 시도 횟수
-        try_count = 0
-
-        # end 출력 전까지 실행
-        while state != 'end':
-            # drive 상태일 때
-            if state == 'drive':
-                #drive
-                
-                # 자율 주행 시도 횟수 초기화
-                 try_count = 0
-
-            # turn 상태일 때
-            elif state == 'turn':
-                # U turn
-                
-                # 자율 주행 시도 횟수 초기화
-                 try_count = 0
-
-            # retry 상태일 때
-            elif state == 'retry':
-                # 시도 횟수 10번 미만일 때
-                if try_count < 10:
-                    # 자율 주행 상태 다시 판별
-                    state = control.set_state()
-
-                    # 자율 주행 시도 횟수 증가
-                    try_count += 1
-                
-                # 시도 횟수 10번 이상일 때
-                else:
-                    # 주행 종료
-                    print("시도 횟수가 10번을 넘었습니다. 자율 주행을 종료합니다.")
-                    break
-
-        # end 출력 후
-        # 잠시 전진
+        # 주행 시작
+        asyncio.run(control.drive_auto())
 
     # 주행 종료
     del control

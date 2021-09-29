@@ -321,8 +321,7 @@ class ControlMode2:
                                   blocks[round(((self.forward_direction - 180 + current_degree) % 360) * 2)], current_degree]
 
         # 목적지 부근에 도착했을 때
-        if (round(self.ship_position[0] / self.destination[0]) == 1
-                or round(self.ship_position[1] / self.destination[1]) == 1) and self.drive_mode != 'start':
+        if cal.get_distance(self.ship_position[:2], self.destination) < 0.5 and self.drive_mode != 'start':
             self.drive_mode = 'ready'
 
     # 모터 동작하기

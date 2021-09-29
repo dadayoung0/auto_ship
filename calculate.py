@@ -55,6 +55,13 @@ def get_center_point(point1, point2):
 
     return [center_x, center_y]
 
+# 두 점 사이의 거리
+def get_distance(point1, point2):
+    x = (point1[0] - point2[0]) ** 2
+    y = (point1[1] - point2[1]) ** 2
+
+    return round((x + y) ** 0.5, 2)
+
 
 # 현재 배의 좌표 기준으로 목적지 각도 계산
 def get_destination_degree(destination, ship_point):

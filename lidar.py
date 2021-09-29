@@ -73,6 +73,7 @@ class Lidar:
         blocks = self.block_listen()
 
         shortest_distance = 0
+        shortest_degree = 0
 
         for idx, block in enumerate(blocks):
             if (shortest_distance == 0 or block < shortest_distance) and block != 0:

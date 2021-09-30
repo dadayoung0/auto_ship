@@ -112,7 +112,10 @@ class Camera:
         # tensorflow 사용할 때(부표와 작은공 구별하여 인식 가능)
         if self.tensor:
             # BGR 이미지를 RGB 이미지로 변경
-            img_tensor = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            try:
+                img_tensor = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            except:
+                return (None, None)
 
             # 원본 이미지 크기 저장
             origin_h, origin_w, _ = img.shape

@@ -1,3 +1,4 @@
+from cv2 import contourArea
 from motor import *
 from socket import *
 from graphic import *
@@ -202,7 +203,8 @@ class ControlMode2:
         while self.process:
             # 카메라로 객체 탐지가 가능한 상황일 때
             if self.camera_state:
-                self.set_destination()
+                if not self.set_destination():
+                    continue
 
             # 배 위치 설정
             self.set_ship_position()
@@ -219,11 +221,9 @@ class ControlMode2:
         print('start')
         # 객체 탐지 결과 저장
         img, results = self.camera.object_detection()
+        if img == None:
+            return False
         print('객체 탐지 완료')
-
-        if img == 0:
-            print("empty image")
-            return
 
         # 화면에 출력할 이미지 설정
         self.camera_graphic.set_image(img)
@@ -307,6 +307,8 @@ class ControlMode2:
         self.camera_graphic.show_image()
 
         self.camera_state = True
+
+        return True
 
     # 장애물 정보 확인하며 주행 보조(라이다 + IMU)
     def set_ship_position(self):

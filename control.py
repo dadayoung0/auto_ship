@@ -8,7 +8,7 @@ import calculate as cal
 import asyncio
 
 
-# 실제 부표 크기(cm)
+# 실제 부표 크기(M)
 REAL_BUOY_SIZE = 0.4
 
 # 실제 경기장 크기(M)
@@ -173,6 +173,8 @@ class ControlMode2:
 
         # 후방 벽과의 거리를 측정할 때까지 반복
         while wall_distance_back == 0:
+            if input() == 'start':
+                wall_distance_back = 1
             # 라이다로 가장 짧은 장애물 측정
             shortest_degree, shortest_distance, blocks = self.lidar.shortest_block()
 
@@ -201,9 +203,10 @@ class ControlMode2:
         # 작업 상태일 때
         while self.process:
             # 카메라로 객체 탐지가 가능한 상황일 때
-            if self.camera_state:
-                # 카메라로 목적지 계산
-                asyncio.ensure_future(self.set_destination())
+            # if self.camera_state:
+            #     # 카메라로 목적지 계산
+            #     await asyncio.ensure_future(self.set_destination())
+            self.set_destination()
             asyncio.sleep(0.1)
             # 배 위치 설정
             self.set_ship_position()
@@ -214,7 +217,8 @@ class ControlMode2:
                                       int(self.ship_position[2]), self.destination)
 
     # 목적지 계산(카메라)
-    async def set_destination(self):
+    def set_destination(self):
+        self.camera_state = False
         print('start')
         # 객체 탐지 결과 저장
         img, results = self.camera.object_detection()

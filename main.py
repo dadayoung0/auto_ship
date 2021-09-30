@@ -1,5 +1,4 @@
 from control import *
-import asyncio
 
 
 # ################### MODE LIST ####################
@@ -11,8 +10,7 @@ import asyncio
 # 메인 함수(프로그램 실행)
 if __name__ == "__main__":
     # 모드 입력
-    # mode = int(input("어떤 모드를 실행할까요?(1: 직접 조종, 2: 카메라+라이다)\n"))
-    mode = 2
+    mode = int(input("어떤 모드를 실행할까요?(1: 직접 조종, 2: 카메라+라이다)\n"))
 
     # mode1(직접 주행일 때)
     if mode == 1:
@@ -28,10 +26,7 @@ if __name__ == "__main__":
         control = ControlMode2()
 
         # 주행 시작
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(control.drive_auto())
-        loop.close()
-        # asyncio.run(control.drive_auto())
+        control.drive_auto()
 
     # 주행 종료
     del control

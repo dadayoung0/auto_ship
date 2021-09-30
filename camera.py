@@ -1,7 +1,7 @@
 import cv2
 import time
 import numpy as np
-import tensorflow as tf
+import tensorflow.lite as tflite
 
 
 # 동영상 설정
@@ -11,7 +11,7 @@ FPS = 5
 
 # tensorflow 파일 위치
 LABEL_DIR = './tensor_model/labels.txt'
-MODEL_DIR = './model.tflite'
+MODEL_DIR = './tensor_model/model.tflite'
 
 # tensorflow 정확도 최소값
 CONFIDENCE_THRESHOLD = 0.5
@@ -52,13 +52,13 @@ class Camera:
             # tpu 사용할 때
             if tpu:
                 # 모델 불러오기
-                self.model = tf.lite.Interpreter(model_path=MODEL_DIR,
-                                                 experimental_delegates=[tf.lite.experimental.load_delegate('libedgetpu.so.1.0')])
+                self.model = tflite.Interpreter(model_path=MODEL_DIR,
+                                                 experimental_delegates=[tflite.experimental.load_delegate('libedgetpu.so.1.0')])
 
             # tpu 사용하지 않을 때
             else:
                 # 모델 불러오기
-                self.model = tf.lite.Interpreter(model_path=MODEL_DIR)
+                self.model = tflite.Interpreter(model_path=MODEL_DIR)
 
             # 모델 초기화(텐서 할당하기)
             self.model.allocate_tensors()
@@ -78,6 +78,12 @@ class Camera:
             # 색체 탐지 영역 최소크기 지정
             self.area_min = 100
 
+        # 딜레이 제어용 빈화면 출력
+        for i in range(10):
+            _, test_img = self.cap.read()
+            cv2.imshow("test", test_img)
+            cv2.waitKey(1)
+
     # fps 계산 > fps 반환
     def get_fps(self):
         # 현재 시간 저장
@@ -96,7 +102,7 @@ class Camera:
         return round(fps, 1)
 
     # 객체 탐지 > 객체 표시된 이미지, 탐지 결과 반환
-    async def object_detection(self):
+    def object_detection(self):
         # 카메라에서 프레임 받아오기
         _, img = self.cap.read()
 
@@ -106,7 +112,10 @@ class Camera:
         # tensorflow 사용할 때(부표와 작은공 구별하여 인식 가능)
         if self.tensor:
             # BGR 이미지를 RGB 이미지로 변경
-            img_tensor = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            try:
+                img_tensor = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            except:
+                return (None, None)
 
             # 원본 이미지 크기 저장
             origin_h, origin_w, _ = img.shape

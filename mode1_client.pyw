@@ -32,8 +32,8 @@ def main(joy_stick):
                     pygame.quit()
                     exit()
 
-            degree = str(int(joystick.get_axis(0) * 80))
-            speed = str(int(joystick.get_axis(2) * (-50)))
+            degree = str(int(joystick.get_axis(0) * 40))
+            speed = str(int(joystick.get_axis(2) * (-10)))
 
             while len(degree) != 3:
                 if len(degree) < 3:

@@ -1,9 +1,7 @@
 import cv2
 import time
 import numpy as np
-
-from tflite_runtime.interpreter import Interpreter
-from tflite_runtime.interpreter import load_delegate
+import tensorflow as tf
 
 
 # 동영상 설정
@@ -13,10 +11,10 @@ FPS = 5
 
 # tensorflow 파일 위치
 LABEL_DIR = './tensor_model/labels.txt'
-MODEL_DIR = './tensor_model/model.tflite'
+MODEL_DIR = './model.tflite'
 
 # tensorflow 정확도 최소값
-CONFIDENCE_THRESHOLD = 0.7
+CONFIDENCE_THRESHOLD = 0.5
 
 
 # 젯슨 나노 카메라 동작 코드
@@ -54,12 +52,13 @@ class Camera:
             # tpu 사용할 때
             if tpu:
                 # 모델 불러오기
-                self.model = Interpreter(model_path=MODEL_DIR, experimental_delegates=[load_delegate('libedgetpu.so.1.0')])
+                self.model = tf.lite.Interpreter(model_path=MODEL_DIR,
+                                                 experimental_delegates=[tf.lite.experimental.load_delegate('libedgetpu.so.1.0')])
 
             # tpu 사용하지 않을 때
             else:
                 # 모델 불러오기
-                self.model = Interpreter(model_path=MODEL_DIR)
+                self.model = tf.lite.Interpreter(model_path=MODEL_DIR)
 
             # 모델 초기화(텐서 할당하기)
             self.model.allocate_tensors()
@@ -71,12 +70,13 @@ class Camera:
             self.input_w = self.input_details[0]['shape'][2]        # 입력 이미지 너비
 
             # 모델 타입 판단(입력값이 실수형인지 판단)
-            self.floating_model = (self.input_details[0]['dtype'] == np.float32)
+            self.floating_model = (
+                self.input_details[0]['dtype'] == np.float32)
 
         # tensorflow 사용하지 않을 때
         else:
             # 색체 탐지 영역 최소크기 지정
-            self.area_min = 10000
+            self.area_min = 100
 
     # fps 계산 > fps 반환
     def get_fps(self):
@@ -132,10 +132,14 @@ class Camera:
             print('%.2f ms' % (end * 1000))
 
             # 객체 탐지 결과 받아오기
-            scores = self.model.get_tensor(self.output_details[0]['index'])[0]      # 정확도
-            boxes = self.model.get_tensor(self.output_details[1]['index'])[0]       # 테두리 좌표
-            count = self.model.get_tensor(self.output_details[2]['index'])[0]       # 객체 갯수
-            classes = self.model.get_tensor(self.output_details[3]['index'])[0]     # 객체 클래스 번호
+            scores = self.model.get_tensor(
+                self.output_details[0]['index'])[0]      # 정확도
+            boxes = self.model.get_tensor(self.output_details[1]['index'])[
+                0]       # 테두리 좌표
+            count = self.model.get_tensor(self.output_details[2]['index'])[
+                0]       # 객체 갯수
+            classes = self.model.get_tensor(self.output_details[3]['index'])[
+                0]     # 객체 클래스 번호
 
             # 객체 개수만큼 반복
             for i in range(int(count)):
@@ -148,7 +152,8 @@ class Camera:
                     x_max = int(min(origin_w, (boxes[i][3] * origin_w)))
 
                     # 탐지 결과 리스트에 추가
-                    result.append([self.labels[int(classes[i])], x_min, y_min, x_max, y_max])
+                    result.append([self.labels[int(classes[i])],
+                                  x_min, y_min, x_max, y_max])
 
         # tensorflow 사용하지 않을 때(부표만 인식)
         else:
@@ -161,7 +166,8 @@ class Camera:
             img_detect = img_mask1 + img_mask2
 
             # 추출한 영역 경계선 찾기
-            contours, _ = cv2.findContours(img_detect, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+            contours, _ = cv2.findContours(
+                img_detect, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
             # 경계선 개수만큼 반복
             for cnt in contours:

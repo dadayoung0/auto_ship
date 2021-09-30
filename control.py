@@ -9,11 +9,11 @@ import asyncio
 
 
 # 실제 부표 크기(cm)
-REAL_BUOY_SIZE = 100
+REAL_BUOY_SIZE = 0.4
 
 # 실제 경기장 크기(M)
-REAL_TRACK_WIDTH = 4.5
-REAL_TRACK_HEIGHT = 14.5
+REAL_TRACK_WIDTH = 4
+REAL_TRACK_HEIGHT = 10
 
 # 지도 배율
 MAGNIFICATION = 60
@@ -125,7 +125,7 @@ class ControlMode2:
 
         # 모터 생성 및 기본값 설정
         self.motor = Motor()
-        self.speed = 5
+        self.speed = 12
         self.direction = 0
 
         # 카메라 생성 및 출력 화면 설정
@@ -215,8 +215,10 @@ class ControlMode2:
 
     # 목적지 계산(카메라)
     async def set_destination(self):
+        print('start')
         # 객체 탐지 결과 저장
         img, results = self.camera.object_detection()
+        print('객체 탐지 완료')
 
         # 화면에 출력할 이미지 설정
         self.camera_graphic.set_image(img)
@@ -229,6 +231,7 @@ class ControlMode2:
             # 3번 이상 객체 탐지 실패 시 카메라 상태 변경
             if self.detection_fail_count >= 3:
                 self.camera_state = False
+            print('객체 탐지 실패')
 
         # 객체 탐지에 성공했을 때
         else:
@@ -288,6 +291,8 @@ class ControlMode2:
             if self.add_buoy_point_trigger:
                 self.map_graphic.add_buoy_point(buoy_point)
                 self.add_buoy_point_trigger = False
+
+            print('객체 탐지 성공')
 
         # FPS 이미지에 추가
         self.camera_graphic.add_text_on_img(

@@ -108,8 +108,8 @@ class Graphic:
                 self.img, (buoy_point[0], buoy_point[1]), 10, self.buoy_color, 5)
 
     # 부표 좌표 추가
-    def add_buoy_point(self, x, y):
-        self.buoy_point_list.append([x, y])
+    def add_buoy_point(self, buoy_point):
+        self.buoy_point_list.append([buoy_point[0], buoy_point[1]])
 
     # 목적지 좌표 지도에 표시
     def draw_destination_on_map(self, destination_point):

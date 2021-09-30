@@ -27,7 +27,7 @@ class Graphic:
         self.text_color = (200, 0, 200)
         self.ship_color = (0, 0, 0)
         self.buoy_color = (0, 0, 255)
-        self.destination_color = (0, 255, 255)
+        self.destination_color = (255, 0, 255)
         self.smallball_color = (0, 255, 0)
 
         # 부표 좌표 리스트
@@ -113,8 +113,9 @@ class Graphic:
 
     # 목적지 좌표 지도에 표시
     def draw_destination_on_map(self, destination_point):
-        cv2.circle(
-            self.img, (destination_point[0], destination_point[1]), 5, self.destination_color, 5)
+        if not destination_point == [0, 0]:
+            cv2.circle(
+                self.img, (destination_point[0], destination_point[1]), 5, self.destination_color, 5)
 
     # 지도 그리기
     def draw_map(self, ship_pos: list, ship_th: int, des_pos: list):

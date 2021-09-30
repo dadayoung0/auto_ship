@@ -8,12 +8,12 @@ import calculate as cal
 import asyncio
 
 
-# 실제 부표 크기(cm)
-REAL_BUOY_SIZE = 100
+# 실제 부표 크기(M)
+REAL_BUOY_SIZE = 0.4
 
 # 실제 경기장 크기(M)
-REAL_TRACK_WIDTH = 4.5
-REAL_TRACK_HEIGHT = 14.5
+REAL_TRACK_WIDTH = 4
+REAL_TRACK_HEIGHT = 10
 
 # 지도 배율
 MAGNIFICATION = 60
@@ -125,7 +125,7 @@ class ControlMode2:
 
         # 모터 생성 및 기본값 설정
         self.motor = Motor()
-        self.speed = 5
+        self.speed = 12
         self.direction = 0
 
         # 카메라 생성 및 출력 화면 설정
@@ -173,6 +173,8 @@ class ControlMode2:
 
         # 후방 벽과의 거리를 측정할 때까지 반복
         while wall_distance_back == 0:
+            if input() == 'start':
+                wall_distance_back = 1
             # 라이다로 가장 짧은 장애물 측정
             shortest_degree, shortest_distance, blocks = self.lidar.shortest_block()
 
@@ -201,9 +203,10 @@ class ControlMode2:
         # 작업 상태일 때
         while self.process:
             # 카메라로 객체 탐지가 가능한 상황일 때
-            if self.camera_state:
-                # 카메라로 목적지 계산
-                asyncio.ensure_future(self.set_destination())
+            # if self.camera_state:
+            #     # 카메라로 목적지 계산
+            #     await asyncio.ensure_future(self.set_destination())
+            self.set_destination()
             asyncio.sleep(0.1)
             # 배 위치 설정
             self.set_ship_position()
@@ -214,9 +217,12 @@ class ControlMode2:
                                       int(self.ship_position[2]), self.destination)
 
     # 목적지 계산(카메라)
-    async def set_destination(self):
+    def set_destination(self):
+        self.camera_state = False
+        print('start')
         # 객체 탐지 결과 저장
         img, results = self.camera.object_detection()
+        print('객체 탐지 완료')
 
         # 화면에 출력할 이미지 설정
         self.camera_graphic.set_image(img)
@@ -229,6 +235,7 @@ class ControlMode2:
             # 3번 이상 객체 탐지 실패 시 카메라 상태 변경
             if self.detection_fail_count >= 3:
                 self.camera_state = False
+            print('객체 탐지 실패')
 
         # 객체 탐지에 성공했을 때
         else:
@@ -289,6 +296,8 @@ class ControlMode2:
                 self.map_graphic.add_buoy_point(buoy_point)
                 self.add_buoy_point_trigger = False
 
+            print('객체 탐지 성공')
+
         # FPS 이미지에 추가
         self.camera_graphic.add_text_on_img(
             "FPS : " + str(self.camera.get_fps()))
@@ -321,6 +330,8 @@ class ControlMode2:
             # 현재 선박 위치 업데이트
             self.ship_position = [REAL_TRACK_WIDTH - blocks[round(((self.forward_direction + 90 + current_degree) % 360) * 2)],
                                   blocks[round(((self.forward_direction - 180 + current_degree) % 360) * 2)], current_degree]
+
+            print('배 좌표 : ', self.ship_position)
 
         # 목적지 부근에 도착했을 때
         if cal.get_distance(self.ship_position[:2], self.destination) < 0.5 and self.drive_mode != 'start':

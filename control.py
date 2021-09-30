@@ -180,6 +180,9 @@ class ControlMode2:
         # 부표 좌표 추가 트리거 (True일때만 넣을 수 있게)
         self.add_buoy_point_trigger = True
 
+        # 부표 현재 개수
+        self.cur_buoy_count = 0
+
         # 후방 벽과의 거리를 측정할 때까지 반복
         while wall_distance_back == 0:
             wall_distance_back = 1
@@ -303,8 +306,9 @@ class ControlMode2:
             self.drive_mode = 'drive'
 
             # 처음 한번만 부표 그리기
-            if self.add_buoy_point_trigger:
+            if self.add_buoy_point_trigger and self.cur_buoy_count < 3:
                 self.map_graphic.add_buoy_point(buoy_point)
+                self.cur_buoy_count += 1
                 self.add_buoy_point_trigger = False
 
             print('객체 탐지 성공')

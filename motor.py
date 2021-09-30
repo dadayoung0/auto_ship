@@ -1,7 +1,6 @@
 from adafruit_servokit import ServoKit  # 서보모터 드라이버를 사용하기 위해 패키지를 불러옵니다
 import board  # 서보모터 드라이버 패키지에 종속된 패키지입니다
 import busio  # 위와같이 서보모터 드라이버 패키지에 종속된 패키지입니다
-import time  # 모터 제어시 delay를 주기 위해 time패키지를 불러옵니다
 
 
 class Motor:
@@ -23,9 +22,6 @@ class Motor:
         # 하지만 40~140정도의 범위에서 움직이는 것을 추천한다
         self.servo_kit.servo[1].angle = 90
 
-        # 2초정도 기다립니다
-        time.sleep(2)
-
     # 모터 동작 함수
     # degree : -90(좌측) ~ +90(우측)
     # speed : -100(후진) ~ +100(전진)
@@ -37,9 +33,6 @@ class Motor:
         # 1번째 모터(BLDC 모터)를 90을 기준으로 주어진 속도로 움직입니다
         if -100 <= speed <= 100:
             self.servo_kit.servo[1].angle = 90 - (speed * (90/100))
-
-        # 에러를 방지하기 위해 0.02초 지연합니다
-        time.sleep(0.02)
 
     # 각도만을 변경합니다
     def motor_move_only_degree(self, degree: int):

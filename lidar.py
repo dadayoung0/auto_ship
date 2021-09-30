@@ -13,11 +13,11 @@ class Lidar:
         # roscore 프로그램을 백그라운드에서 실행합니다
         os.system("screen -dmS core roscore")
         # roscore가 실행되어야 다음 작업이 실행되므로 잠깐 기다려줍니다
-        time.sleep(7)
+        time.sleep(5)
         # 라이다 작동 프로그램을 백그라운드에서 실행합니다
         os.system("screen -dmS lidar roslaunch ydlidar_ros X4.launch")
         # 라이다가 움직이기까지 잠시 기다려줍니다
-        time.sleep(7)
+        time.sleep(5)
         # 라이다를 이용해 매핑을 하고 현재 위치를 파악하는 프로그램을 백그라운드에서 실행합니다
         os.system("screen -dmS mapping roslaunch hector_mapping mapping_default.launch")
 

@@ -1,7 +1,7 @@
 import math
 
 # 미리 측정해둔 픽셀 거리
-pixel_distance = 123
+pixel_distance = 432
 
 
 # 가로 길이와 세로 길이의 평균

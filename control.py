@@ -5,7 +5,6 @@ from lidar import *
 from camera import *
 from imu import *
 import calculate as cal
-import asyncio
 
 
 # 실제 부표 크기(M)
@@ -19,7 +18,7 @@ REAL_TRACK_HEIGHT = 10
 MAGNIFICATION = 60
 
 # 안전 거리
-SAFE_DISTANCE = 0.5
+SAFE_DISTANCE = 0.3
 
 
 # mode1 : 사용자가 직접 조종
@@ -173,8 +172,7 @@ class ControlMode2:
 
         # 후방 벽과의 거리를 측정할 때까지 반복
         while wall_distance_back == 0:
-            if input() == 'start':
-                wall_distance_back = 1
+            wall_distance_back = 1
             # 라이다로 가장 짧은 장애물 측정
             shortest_degree, shortest_distance, blocks = self.lidar.shortest_block()
 
@@ -199,30 +197,33 @@ class ControlMode2:
                 REAL_TRACK_WIDTH / 2.0, REAL_TRACK_HEIGHT - wall_distance_back, 0]
 
     # 자율 주행 시작
-    async def drive_auto(self):
+    def drive_auto(self):
         # 작업 상태일 때
         while self.process:
             # 카메라로 객체 탐지가 가능한 상황일 때
-            # if self.camera_state:
-            #     # 카메라로 목적지 계산
-            #     await asyncio.ensure_future(self.set_destination())
-            self.set_destination()
-            asyncio.sleep(0.1)
+            if self.camera_state:
+                self.set_destination()
+
             # 배 위치 설정
             self.set_ship_position()
+
             # 모터 동작
-            asyncio.ensure_future(self.motor_controller())
+            self.motor_controller()
+
             # 지도 갱신
             self.map_graphic.draw_map([int(self.ship_position[0] * MAGNIFICATION), int(self.ship_position[1] * MAGNIFICATION)],
                                       int(self.ship_position[2]), self.destination)
 
     # 목적지 계산(카메라)
     def set_destination(self):
-        self.camera_state = False
         print('start')
         # 객체 탐지 결과 저장
         img, results = self.camera.object_detection()
         print('객체 탐지 완료')
+
+        if img == 0:
+            print("empty image")
+            return
 
         # 화면에 출력할 이미지 설정
         self.camera_graphic.set_image(img)
@@ -338,7 +339,7 @@ class ControlMode2:
             self.drive_mode = 'ready'
 
     # 모터 동작하기
-    async def motor_controller(self):
+    def motor_controller(self):
         # 목적지로 주행할 때
         if self.drive_mode == 'drive':
             # 목적지 각도 계산
@@ -375,7 +376,7 @@ class ControlMode2:
                 self.motor.motor_move(self.direction, self.speed)
 
             # 장애물 피할 때까지 모터 동작
-            await asyncio.sleep(0.5)
+            time.sleep(0.5)
 
             # 모터 모드 변경
             self.drive_mode = 'drive'
@@ -393,7 +394,7 @@ class ControlMode2:
                 self.motor.motor_move(self.direction, self.speed)
 
                 # 잠시 동작
-                await asyncio.sleep(0.5)
+                time.sleep(0.5)
 
                 # 모터 정지
                 self.motor.motor_move(0, 0)

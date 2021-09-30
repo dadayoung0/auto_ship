@@ -230,9 +230,10 @@ class ControlMode2:
         print('start')
         # 객체 탐지 결과 저장
         img, results = self.camera.object_detection()
-        if img == None:
-            return False
         print('객체 탐지 완료')
+
+        if len(img) == 0:
+            return False
 
         # 화면에 출력할 이미지 설정
         self.camera_graphic.set_image(img)

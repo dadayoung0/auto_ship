@@ -31,7 +31,7 @@ class Graphic:
         self.smallball_color = (0, 255, 0)
 
         # 부표 좌표 리스트
-        self.buoy_point_list = [[200, 100], [200, 300], [200, 500]]
+        self.buoy_point_list = []
 
     # 출력할 이미지 설정하기
     def set_image(self, img):

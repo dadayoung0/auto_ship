@@ -105,7 +105,7 @@ class Graphic:
         # 원 그리기
         for buoy_point in buoy_points:
             cv2.circle(
-                self.img, (buoy_point[0], buoy_point[1]), 10, self.buoy_color, 5)
+                self.img, (int(buoy_point[0]), int(buoy_point[1])), 10, self.buoy_color, 5)
 
     # 부표 좌표 추가
     def add_buoy_point(self, buoy_point):

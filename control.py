@@ -194,9 +194,13 @@ class ControlMode2:
                 # 가장 짧은 거리를 후방 벽과의 거리로 저장
                 wall_distance_back = shortest_distance
 
+        test_var = 180
+
         # 좌우 벽과의 거리 저장
-        wall_distance_left = blocks[int((shortest_degree + 90) * 2)]
-        wall_distance_right = blocks[int((shortest_degree - 90) * 2)]
+        wall_distance_left = blocks[int((test_var + 90) * 2)]
+        wall_distance_right = blocks[int((test_var - 90) * 2)]
+        # wall_distance_left = blocks[int((shortest_degree + 90) * 2)]
+        # wall_distance_right = blocks[int((shortest_degree - 90) * 2)]
 
         # 좌우 벽과의 거리의 합이 경기장의 가로 길이와 비슷한지 확인
         if REAL_TRACK_WIDTH - 0.5 < wall_distance_left + wall_distance_right < REAL_TRACK_WIDTH + 0.5:

@@ -32,8 +32,8 @@ class ControlMode1:
         self.motor = Motor()
 
         # 모터 기본 셋팅값
-        self.speed = 20
-        self.degree = 40
+        self.speed = 10
+        self.degree = 20
         self.direction = 0
 
         # 소켓 통신 셋팅
@@ -59,7 +59,16 @@ class ControlMode1:
                 if self.joy_stick:
                     if data != '':
                         conn.send("ok".encode('utf-8'))
-                        self.motor.motor_move(int(data[0:3]), int(data[3:6]))
+                        if data[1] == '-':
+                            self.degree = int(data[1:3])
+                        else:
+                            self.degree = int(data[0:3])
+
+                        if data[4] == '-':
+                            self.speed = int(data[4:6])
+                        else:
+                            self.speed = int(data[3:6])
+                        self.motor.motor_move(self.degree, self.speed)
 
                 # 조이스틱을 사용하지 않을 때
                 else:
@@ -86,23 +95,23 @@ class ControlMode1:
                     elif data == "keyupservo":
                         self.motor.motor_move_only_degree(0)
                     if data == "one":
-                        self.speed = 15
+                        self.speed = 3
                         self.motor.motor_move_only_speed(
                             self.direction * self.speed)
                     elif data == "two":
-                        self.speed = 25
+                        self.speed = 6
                         self.motor.motor_move_only_speed(
                             self.direction * self.speed)
                     elif data == "thr":
-                        self.speed = 35
+                        self.speed = 9
                         self.motor.motor_move_only_speed(
                             self.direction * self.speed)
                     elif data == "for":
-                        self.speed = 45
+                        self.speed = 12
                         self.motor.motor_move_only_speed(
                             self.direction * self.speed)
                     elif data == "fiv":
-                        self.speed = 55
+                        self.speed = 15
                         self.motor.motor_move_only_speed(
                             self.direction * self.speed)
             # 오류 발생

@@ -118,34 +118,26 @@ class Camera:
             except:
                 return (None, None)
 
-            print('__1__')
             # 원본 이미지 크기 저장
             origin_h, origin_w, _ = img.shape
-            print('__2__')
 
             # 원본 이미지를 tensorflow 이미지 크기로 변환
             img_tensor = cv2.resize(img_tensor, (self.input_w, self.input_h))
-            print('__3__')
 
             # 객체 탐지에 사용할 이미지 데이터 생성(matrix 데이터를 tensor 데이터로 변환)
             input_data = np.expand_dims(img_tensor, axis=0)
-            print('__4__')
 
             # 실수형 입력값을 갖는 모델일 때
             if self.floating_model:
                 # 입력값을 실수형으로 변경(0~255 픽셀값을 -1~1 픽셀값으로 변경)
                 input_data = (np.float32(input_data) - 127.5) / 127.5
 
-            print('__5__')
             # 불러온 모델에 가공된 이미지 데이터 주입
             self.model.set_tensor(self.input_details[0]['index'], input_data)
-            print('__6__')
 
             # 객체 탐지
             start = time.perf_counter()         # 객체 탐지 시작 시간
-            print('__7__')
             self.model.invoke()                 # 객체 탐지 수행
-            print('__8__')
             end = time.perf_counter() - start   # 객체 탐지 걸린 시간
             print('%.2f ms' % (end * 1000))
 

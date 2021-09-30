@@ -203,10 +203,10 @@ class ControlMode2:
         # 작업 상태일 때
         while self.process:
             # 카메라로 객체 탐지가 가능한 상황일 때
-            # if self.camera_state:
-            #     # 카메라로 목적지 계산
-            #     await asyncio.ensure_future(self.set_destination())
-            self.set_destination()
+            if self.camera_state:
+                # 카메라로 목적지 계산
+                await asyncio.ensure_future(self.set_destination())
+            # self.set_destination()
             asyncio.sleep(0.1)
             # 배 위치 설정
             self.set_ship_position()
@@ -217,7 +217,7 @@ class ControlMode2:
                                       int(self.ship_position[2]), self.destination)
 
     # 목적지 계산(카메라)
-    def set_destination(self):
+    async def set_destination(self):
         self.camera_state = False
         print('start')
         # 객체 탐지 결과 저장
@@ -304,6 +304,8 @@ class ControlMode2:
 
         # 사진 출력
         self.camera_graphic.show_image()
+
+        self.camera_state = True
 
     # 장애물 정보 확인하며 주행 보조(라이다 + IMU)
     def set_ship_position(self):

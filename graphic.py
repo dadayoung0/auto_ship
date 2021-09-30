@@ -20,9 +20,6 @@ class Graphic:
         # 화면 제목
         self.title = title
 
-        # 텍스트 갯수
-        self.text_num = 0
-
         # 색 지정
         self.text_color = (200, 0, 200)
         self.ship_color = (0, 0, 0)
@@ -45,13 +42,11 @@ class Graphic:
         cv2.waitKey(1)
 
     # 이미지에 입력된 글자 개수만큼 표시(화면 좌상단 위치부터 표시)
-    def add_text_on_img(self, *texts):
+    def add_text_on_img(self, text):
         # text 매개변수의 index, 내용 조회
-        for idx, text in enumerate(texts):
-            # text_num, text 개수에 따라 y축 위치 조정하여 글자 표시
-            cv2.putText(self.img, text, (5, 30*(idx+self.text_num+1)),
-                        cv2.FONT_HERSHEY_COMPLEX, 1, self.text_color, 2)
-            self.text_num += 1
+        # text_num, text 개수에 따라 y축 위치 조정하여 글자 표시
+        cv2.putText(self.img, text, (5, 5),
+                    cv2.FONT_HERSHEY_COMPLEX, 1, self.text_color, 2)
 
     # 객체 정보 이미지에 표시(객체 테두리 좌표에 표시)
     def draw_object_on_img(self, obj_data):

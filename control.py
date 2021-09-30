@@ -185,7 +185,6 @@ class ControlMode2:
 
         # 후방 벽과의 거리를 측정할 때까지 반복
         while wall_distance_back == 0:
-            wall_distance_back = 1
             # 라이다로 가장 짧은 장애물 측정
             shortest_degree, shortest_distance, blocks = self.lidar.shortest_block()
 
@@ -194,13 +193,9 @@ class ControlMode2:
                 # 가장 짧은 거리를 후방 벽과의 거리로 저장
                 wall_distance_back = shortest_distance
 
-        test_var = 180
-
         # 좌우 벽과의 거리 저장
-        wall_distance_left = blocks[int((test_var + 90) * 2)]
-        wall_distance_right = blocks[int((test_var - 90) * 2)]
-        # wall_distance_left = blocks[int((shortest_degree + 90) * 2)]
-        # wall_distance_right = blocks[int((shortest_degree - 90) * 2)]
+        wall_distance_left = blocks[int((shortest_degree + 90) * 2)]
+        wall_distance_right = blocks[int((shortest_degree - 90) * 2)]
 
         # 좌우 벽과의 거리의 합이 경기장의 가로 길이와 비슷한지 확인
         if REAL_TRACK_WIDTH - 0.5 < wall_distance_left + wall_distance_right < REAL_TRACK_WIDTH + 0.5:
@@ -217,6 +212,8 @@ class ControlMode2:
     def drive_auto(self):
         # 작업 상태일 때
         while self.process:
+            print(self.drive_mode)
+
             # 카메라로 객체 탐지가 가능한 상황일 때
             if self.camera_state:
                 if not self.set_destination():
@@ -354,7 +351,7 @@ class ControlMode2:
             self.ship_position = [REAL_TRACK_WIDTH - blocks[round(((self.forward_direction + 90 + current_degree) % 360) * 2)],
                                   blocks[round(((self.forward_direction - 180 + current_degree) % 360) * 2)], current_degree]
 
-            print('배 좌표 : ', self.ship_position)
+        print('배 좌표 : ', self.ship_position)
 
         # 목적지 부근에 도착했을 때
         if cal.get_distance(self.ship_position[:2], self.destination) < 0.5 and self.drive_mode != 'start':
@@ -376,6 +373,7 @@ class ControlMode2:
                 motor_degree -= 360
             elif motor_degree < -180:
                 motor_degree += 360
+
             if motor_degree > 45:
                 motor_degree = 45
             elif motor_degree < -45:

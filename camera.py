@@ -79,7 +79,7 @@ class Camera:
             self.area_min = 100
 
         # 딜레이 제어용 빈화면 출력
-        for i in range(10):
+        for i in range(30):
             _, test_img = self.cap.read()
             cv2.imshow("test", test_img)
             cv2.waitKey(1)

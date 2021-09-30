@@ -143,7 +143,9 @@ class Camera:
 
             # 객체 탐지
             start = time.perf_counter()         # 객체 탐지 시작 시간
+            print('__7__')
             self.model.invoke()                 # 객체 탐지 수행
+            print('__8__')
             end = time.perf_counter() - start   # 객체 탐지 걸린 시간
             print('%.2f ms' % (end * 1000))
 

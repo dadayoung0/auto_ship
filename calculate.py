@@ -72,11 +72,11 @@ def get_destination_degree(destination, ship_point):
     # 목적지가 선박보다 상단에 위치할 때
     if destination[1] < ship_point[1]:
         center_degree = math.degrees(math.asin(
-            (destination[0] - ship_point[0]) / math.dist(destination, ship_point))) % 360
+            (destination[0] - ship_point[0]) / get_distance(destination, ship_point))) % 360
 
     # 목적지가 선박보다 하단에 위치할 때
     else:
         center_degree = (180 - math.degrees(math.asin(
-            (destination[0] - ship_point[0]) / math.dist(destination, ship_point)))) % 360
+            (destination[0] - ship_point[0]) / get_distance(destination, ship_point)))) % 360
 
     return center_degree

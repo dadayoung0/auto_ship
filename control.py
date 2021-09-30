@@ -306,6 +306,8 @@ class ControlMode2:
         # 사진 출력
         self.camera_graphic.show_image()
 
+        self.camera_state = True
+
     # 장애물 정보 확인하며 주행 보조(라이다 + IMU)
     def set_ship_position(self):
         # 라이다로 가장 짧은 장애물 측정

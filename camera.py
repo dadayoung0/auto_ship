@@ -102,7 +102,7 @@ class Camera:
         return round(fps, 1)
 
     # 객체 탐지 > 객체 표시된 이미지, 탐지 결과 반환
-    def object_detection(self):
+    async def object_detection(self):
         # 카메라에서 프레임 받아오기
         _, img = self.cap.read()
 

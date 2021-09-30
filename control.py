@@ -295,7 +295,7 @@ class ControlMode2:
 
             # 목적지 좌표 저장
             buoy_point = cal.get_destination(
-                target_buoy_distance, target_buoy_degree, self.ship_position[2])
+                target_buoy_distance, target_buoy_degree, self.ship_position)
             self.destination = [
                 buoy_point[0] + (self.turn_direction * REAL_BUOY_SIZE), buoy_point[1]]
 

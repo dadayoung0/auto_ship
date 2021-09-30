@@ -40,10 +40,12 @@ def get_real_degree(real_distance, real_size):
 
 
 # 목적지 좌표 계산
-def get_destination(real_distance, real_degree, ship_point):
+def get_destination(real_distance, real_degree, ship_point: list):
     destination_degree = ship_point[2] + real_degree
-    destination_x = ship_point[0] + (real_distance * math.cos(math.radians(destination_degree)))
-    destination_y = ship_point[1] - (real_distance * math.sin(math.radians(destination_degree)))
+    destination_x = ship_point[0] + (real_distance *
+                                     math.cos(math.radians(destination_degree)))
+    destination_y = ship_point[1] - (real_distance *
+                                     math.sin(math.radians(destination_degree)))
 
     return [destination_x, destination_y]
 
@@ -56,6 +58,8 @@ def get_center_point(point1, point2):
     return [center_x, center_y]
 
 # 두 점 사이의 거리
+
+
 def get_distance(point1, point2):
     x = (point1[0] - point2[0]) ** 2
     y = (point1[1] - point2[1]) ** 2
@@ -67,10 +71,12 @@ def get_distance(point1, point2):
 def get_destination_degree(destination, ship_point):
     # 목적지가 선박보다 상단에 위치할 때
     if destination[1] < ship_point[1]:
-        center_degree = math.degrees(math.asin((destination[0] - ship_point[0]) / math.dist(destination, ship_point))) % 360
+        center_degree = math.degrees(math.asin(
+            (destination[0] - ship_point[0]) / math.dist(destination, ship_point))) % 360
 
     # 목적지가 선박보다 하단에 위치할 때
     else:
-        center_degree = (180 - math.degrees(math.asin((destination[0] - ship_point[0]) / math.dist(destination, ship_point)))) % 360
+        center_degree = (180 - math.degrees(math.asin(
+            (destination[0] - ship_point[0]) / math.dist(destination, ship_point)))) % 360
 
     return center_degree

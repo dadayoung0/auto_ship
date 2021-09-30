@@ -205,8 +205,7 @@ class ControlMode2:
             # 카메라로 객체 탐지가 가능한 상황일 때
             if self.camera_state:
                 # 카메라로 목적지 계산
-                await asyncio.ensure_future(self.set_destination())
-            # self.set_destination()
+                asyncio.ensure_future(self.set_destination())
             asyncio.sleep(0.1)
             # 배 위치 설정
             self.set_ship_position()

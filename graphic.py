@@ -109,13 +109,13 @@ class Graphic:
 
     # 부표 좌표 추가
     def add_buoy_point(self, buoy_point):
-        self.buoy_point_list.append([buoy_point[0], buoy_point[1]])
+        self.buoy_point_list.append([int(buoy_point[0]), int(buoy_point[1])])
 
     # 목적지 좌표 지도에 표시
     def draw_destination_on_map(self, destination_point):
         if not destination_point == [0, 0]:
             cv2.circle(
-                self.img, (destination_point[0], destination_point[1]), 5, self.destination_color, 5)
+                self.img, (int(destination_point[0]), int(destination_point[1])), 5, self.destination_color, 5)
 
     # 지도 그리기
     def draw_map(self, ship_pos: list, ship_th: int, des_pos: list):

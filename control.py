@@ -12,14 +12,14 @@ import calculate as cal
 REAL_BUOY_SIZE = 0.4
 
 # 실제 경기장 크기(M)
-REAL_TRACK_WIDTH = 4
-REAL_TRACK_HEIGHT = 10
+REAL_TRACK_WIDTH = 4.5
+REAL_TRACK_HEIGHT = 14.5
 
 # 지도 배율
 MAGNIFICATION = 60
 
 # 안전 거리
-SAFE_DISTANCE = 0.3
+SAFE_DISTANCE = 1
 
 
 # mode1 : 사용자가 직접 조종
@@ -134,7 +134,7 @@ class ControlMode2:
 
         # 모터 생성 및 기본값 설정
         self.motor = Motor()
-        self.speed = 12
+        self.speed = 17
         self.direction = 0
 
         # 카메라 생성 및 출력 화면 설정

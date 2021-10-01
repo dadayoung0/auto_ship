@@ -19,7 +19,7 @@ REAL_TRACK_HEIGHT = 14.5
 MAGNIFICATION = 60
 
 # 안전 거리
-SAFE_DISTANCE = 1.5
+SAFE_DISTANCE = 0.8
 
 
 # mode1 : 사용자가 직접 조종
@@ -235,7 +235,6 @@ class ControlMode2:
         print('start')
         # 객체 탐지 결과 저장
         img, results = self.camera.object_detection()
-        print('객체 탐지 완료')
 
         if len(img) == 0:
             return False
@@ -255,6 +254,7 @@ class ControlMode2:
 
         # 객체 탐지에 성공했을 때
         else:
+            print('객체 탐지 완료')
             # 객체 탐지 실패 횟수 초기화
             self.detection_fail_count = 0
 

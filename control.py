@@ -19,7 +19,7 @@ REAL_TRACK_HEIGHT = 14.5
 MAGNIFICATION = 60
 
 # 안전 거리
-SAFE_DISTANCE = 1
+SAFE_DISTANCE = 1.5
 
 
 # mode1 : 사용자가 직접 조종

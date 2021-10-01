@@ -14,7 +14,7 @@ LABEL_DIR = './tensor_model/labels.txt'
 MODEL_DIR = './tensor_model/model.tflite'
 
 # tensorflow 정확도 최소값
-CONFIDENCE_THRESHOLD = 0.5
+CONFIDENCE_THRESHOLD = 0.7
 
 
 # 젯슨 나노 카메라 동작 코드

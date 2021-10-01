@@ -19,7 +19,7 @@ REAL_TRACK_HEIGHT = 14.5
 MAGNIFICATION = 60
 
 # 안전 거리
-SAFE_DISTANCE = 0.8
+SAFE_DISTANCE = 0.3
 
 
 # mode1 : 사용자가 직접 조종
@@ -134,7 +134,7 @@ class ControlMode2:
 
         # 모터 생성 및 기본값 설정
         self.motor = Motor()
-        self.speed = 17
+        self.speed = 12
         self.direction = 0
 
         # 카메라 생성 및 출력 화면 설정

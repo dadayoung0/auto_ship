@@ -114,7 +114,6 @@ class Camera:
             # BGR 이미지를 RGB 이미지로 변경
             try:
                 img_tensor = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                print('__0__')
             except:
                 return (None, None)
 

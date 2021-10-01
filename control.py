@@ -226,6 +226,7 @@ class ControlMode2:
             self.motor_controller()
 
             # 지도 갱신
+            print("ship position : ", self.ship_position)
             self.map_graphic.draw_map([int(self.ship_position[0] * MAGNIFICATION), int(self.ship_position[1] * MAGNIFICATION)],
                                       int(self.ship_position[2]), self.destination)
 

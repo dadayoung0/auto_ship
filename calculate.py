@@ -69,6 +69,7 @@ def get_distance(point1, point2):
 
 # 현재 배의 좌표 기준으로 목적지 각도 계산
 def get_destination_degree(destination, ship_point):
+    ship_point[0]
     # 목적지가 선박보다 상단에 위치할 때
     if destination[1] < ship_point[1]:
         center_degree = math.degrees(math.asin(

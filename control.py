@@ -362,9 +362,10 @@ class ControlMode2:
     def motor_controller(self):
         # 목적지로 주행할 때
         if self.drive_mode == 'drive':
-            # 목적지 각도 계산
-            destination_degree = cal.get_destination_degree(
-                self.destination, self.ship_position[:2])
+            if self.ship_position[0] != None and self.ship_position[1] != None:
+                # 목적지 각도 계산
+                destination_degree = cal.get_destination_degree(
+                    self.destination, self.ship_position[:2])
 
             # 모터 지정 각도 저장
             motor_degree = destination_degree - self.ship_position[2]

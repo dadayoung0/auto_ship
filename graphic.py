@@ -2,9 +2,8 @@ import cv2
 import numpy as np
 import math
 
+
 # 화면 제어(이미지 표시)
-
-
 class Graphic:
     # 초기화
     def __init__(self, title, width, height):
@@ -30,7 +29,7 @@ class Graphic:
         # 부표 좌표 리스트
         self.buoy_point_list = []
 
-    # 출력할 이미지 설정하기
+    # 출력할 이미지 설정
     def set_image(self, img):
         self.img = img
 

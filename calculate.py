@@ -1,6 +1,6 @@
 import math
 
-# 미리 측정해둔 픽셀 거리
+# 픽셀 거리
 pixel_distance = 432
 
 

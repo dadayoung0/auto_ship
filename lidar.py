@@ -1,8 +1,8 @@
-import rospy                            # ros 관련 명령어들을 사용하기 위해 rospy 패키지를 불러옵니다
-from sensor_msgs.msg import LaserScan   # ros에서 사용하는 통신규칙 중 Float32라는 규칙을 라이다에서 사용하기 때문에 패키지를 불러옵니다
-from tf2_msgs.msg import TFMessage      # ros에서 사용하는 통신규칙 중 tf2라는 규칙을 라이다에서 사용하기 때문에 패키지를 불러옵니다
-import os                               # 라이다를 작동시키키 위한 ROS 프로그램들을 실행시키고 종료하기 위해, 터미널에 명령을 보낼 필요가 있습니다. 따라서 os 패키지를 불러옵니다
-import time                             # 코드를 일시정지 시켜, 일정시간 delay를 주기 위해 time 패키지를 불러옵니다
+import rospy
+from sensor_msgs.msg import LaserScan
+from tf2_msgs.msg import TFMessage
+import os
+import time
 
 
 class Lidar:
@@ -10,39 +10,41 @@ class Lidar:
     def __init__(self):
         print("lidar init")
 
-        # roscore 프로그램을 백그라운드에서 실행합니다
+        # roscore 백그라운드에 실행
         os.system("screen -dmS core roscore")
-        # roscore가 실행되어야 다음 작업이 실행되므로 잠깐 기다려줍니다
         time.sleep(5)
-        # 라이다 작동 프로그램을 백그라운드에서 실행합니다
+        
+        # 라이다 작동 프로그램 실행
         os.system("screen -dmS lidar roslaunch ydlidar_ros X4.launch")
-        # 라이다가 움직이기까지 잠시 기다려줍니다
         time.sleep(5)
-        # 라이다를 이용해 매핑을 하고 현재 위치를 파악하는 프로그램을 백그라운드에서 실행합니다
+        
+        # 라이다 매핑 프로그램 실행
         os.system("screen -dmS mapping roslaunch hector_mapping mapping_default.launch")
 
-        # 라이다에서 파악한 자신의 위치가 담길 리스트를 만듭니다. 그리고 초기화합니다
+        # 라이다의 위치, 장애물 정보 저장할 리스트
         self.position = []
         self.block = []
 
-        # ROS 시스템과 통신을 시작합니다(노드를 만든다고 합니다)
+        # ROS 통신 시작(노드 생성)
         rospy.init_node('listener', anonymous=True)
-
+        
+    # 라이다의 위치 인식
     def position_callback(self, data):
         # data 변수에, 라이다에서 받아온 수 많은 정보들을 저장합니다
         data = data.transforms[0]
 
         # 이번에 받아온 값이 scanmatcher_frame(우리 배의 위치와 회전값) 주제가 맞다면
         if data.child_frame_id == "scanmatcher_frame":
-            # position 리스트의 0번째에, 이 배의 x 위치를 넣습니다(단위 m)
+            # 라이다의 x좌표(단위 m)
             self.position[0] = data.transform.translation.x
-            # position 리스트의 1번째에, 이 배의 y 위치를 넣습니다(단위 m)
+            # 라이다의 y좌표(단위 m)
             self.position[1] = data.transform.translation.y
-            # position 리스트의 2번째에, 이 배의 회전값을 넣습니다
+            # 라이다의 회전값
             self.position[2] = data.transform.rotation.z
-
+            
+    # 라이다의 위치 반환
     def position_listen(self):
-        # position 리스트에 담긴 쓸모없는 값을 지워줍니다
+        # position 리스트 초기화
         self.position = []
 
         # position_callback()함수를 통해 유의미한 값이 리스트에 담겨진게 아니라면
@@ -50,7 +52,7 @@ class Lidar:
             # 계속 position_callback()함수를 이용하여 데이터를 받아옵니다
             rospy.Subscriber('/tf', TFMessage, self.position_callback)
 
-        # position 값을 반환합니다.
+        # position 반환
         return self.position
 
     def block_callback(self, data):
